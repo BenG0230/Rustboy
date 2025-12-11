@@ -28,11 +28,14 @@ impl Rom {
         }
     }
 
+    // Loads ROM from file and sets correct size for RAM
     pub fn load_rom(&mut self, file_name: &str) -> Result<(), Box<dyn Error>> {
+        // Load ROM from file
         let data: Vec<u8> = fs::read(file_name)?;
 
         self.rom = data;
         let ram_size = match self.rom[0x149] {
+            // Dynamically set RAM size based on byte 0x149 in ROM
             2 => 1024 * 8,
             3 => 1024 * 32,
             4 => 1024 * 128,
@@ -44,6 +47,9 @@ impl Rom {
         Ok(())
     }
 
+    // Read a single byte from ROM or RAM
+    // Maps address 0x0000-7FFFF -> ROM
+    //              0xA000-BFFFF -> RAM
     pub fn read_byte(&self, addr: u16) -> Result<u8, RomError> {
         match addr {
             0x0000..=0x7FFF => self
@@ -60,6 +66,9 @@ impl Rom {
         }
     }
 
+    // Read a single byte from RAM
+    // Maps address 0x0000-7FFFF -> ROM (Rom write error)
+    //              0xA000-BFFFF -> RAM
     pub fn write_byte(&mut self, addr: u16, val: u8) -> Result<(), RomError> {
         match addr {
             0x0000..=0x7FFF => Err(RomError::WriteToRom(addr)),
@@ -72,10 +81,11 @@ impl Rom {
                     Ok(())
                 }
             }
-            _ => Ok(()),
+            _ => Err(RomError::OutOfBounds(addr)),
         }
     }
 
+    // Reads and prints information on the loaded ROM header
     pub fn read_header(&self) {
         println!(" -- NINTENDO LOGO (hopefully) -- ");
         let mut lines: Vec<String> = vec![String::new(); 8];

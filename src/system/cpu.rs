@@ -1,4 +1,30 @@
-use crate::system::bus::Bus;
+use crate::system::bus::{Bus, BusError};
+use std::fmt;
+
+mod decode;
+mod ld_instr;
+
+pub enum CpuError {
+    BusError(BusError),
+    RegisterError(u8),
+    InstructionError(u8),
+}
+
+impl From<BusError> for CpuError {
+    fn from(err: BusError) -> CpuError {
+        CpuError::BusError(err)
+    }
+}
+
+impl fmt::Display for CpuError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            CpuError::BusError(err) => write!(f, "{}", err),
+            CpuError::RegisterError(err) => write!(f, "Unknown register: {}", err),
+            CpuError::InstructionError(err) => write!(f, "Illegal instruction: {}", err),
+        }
+    }
+}
 
 pub struct Cpu {
     // --- Registers ---
@@ -10,8 +36,8 @@ pub struct Cpu {
     e: u8,
     h: u8,
     l: u8,
-    sp: u16,
-    pc: u16,
+    sp: u16, // Stack pointer
+    pc: u16, // Program counter
 }
 
 impl Cpu {
@@ -32,7 +58,72 @@ impl Cpu {
         }
     }
 
-    // --- 16-bit Register helpers ---
+    // --- Register helpers ---
+
+    // Get value in an 8-bit register from index:
+    //  0 = b, 1 = c, 2 = d, 3 = e
+    //  4 = h, 5 = l, 6 = [HL], 7 = a
+    pub fn get_r8(&self, bus: &Bus, reg: u8) -> Result<u8, CpuError> {
+        match reg {
+            0 => Ok(self.b),
+            1 => Ok(self.c),
+            2 => Ok(self.d),
+            3 => Ok(self.e),
+            4 => Ok(self.h),
+            5 => Ok(self.l),
+            6 => bus.read_byte(self.hl()).map_err(CpuError::from),
+            7 => Ok(self.a),
+            _ => Err(CpuError::RegisterError(reg)),
+        }
+    }
+
+    // Write a value to a 8-bit register from index:
+    //  0 = b, 1 = c, 2 = d, 3 = e
+    //  4 = h, 5 = l, 6 = [HL], 7 = a
+    pub fn set_r8(&mut self, bus: &mut Bus, reg: u8, val: u8) -> Result<(), CpuError> {
+        match reg {
+            0 => self.b = val,
+            1 => self.c = val,
+            2 => self.d = val,
+            3 => self.e = val,
+            4 => self.h = val,
+            5 => self.l = val,
+            6 => bus.write_byte(self.hl(), val).map_err(CpuError::from)?,
+            7 => self.a = val,
+            _ => Err(CpuError::RegisterError(reg))?,
+        }
+        Ok(())
+    }
+
+    // Get value in a 16-bit register from index:
+    // 0 = bc, 1 = de
+    // 2 = hl, 3 = sp
+    pub fn get_r16(&self, reg: u8) -> Result<u16, CpuError> {
+        match reg {
+            0 => Ok(self.bc()),
+            1 => Ok(self.de()),
+            2 => Ok(self.hl()),
+            3 => Ok(self.sp),
+            _ => Err(CpuError::RegisterError(reg)),
+        }
+    }
+
+    // Get value in a 16-bit register from index:
+    // 0 = bc, 1 = de
+    // 2 = hl, 3 = sp
+    pub fn set_r16(&mut self, reg: u8, val: u16) -> Result<(), CpuError> {
+        match reg {
+            0 => self.set_bc(val),
+            1 => self.set_de(val),
+            2 => self.set_hl(val),
+            3 => self.sp = val,
+            _ => Err(CpuError::RegisterError(reg))?,
+        }
+        Ok(())
+    }
+
+    // --- 16-bit register helpers ---
+
     pub fn af(&self) -> u16 {
         ((self.a as u16) << 8) | (self.f as u16)
     }
