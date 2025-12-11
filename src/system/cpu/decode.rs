@@ -45,6 +45,11 @@ impl Instruction {
 }
 
 impl Cpu {
+    pub fn unknown_instr(_cpu: &mut Cpu, _bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+        // Either Instruction not implemented or tis illegal
+        Err(CpuError::InstructionError(opcode))
+    }
+
     fn fetch(&self, bus: &mut Bus) -> u8 {
         match bus.read_byte(self.pc) {
             Ok(opcode) => opcode,

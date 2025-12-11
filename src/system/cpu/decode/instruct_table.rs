@@ -83,14 +83,44 @@ pub fn load_instruction_table() -> [Instruction; 256] {
     table[0x1E] = Instruction::new(8, 2, Cpu::ld_r8_n8, "LD E,n8");
     table[0x26] = Instruction::new(8, 2, Cpu::ld_r8_n8, "LD H,n8");
     table[0x2E] = Instruction::new(8, 2, Cpu::ld_r8_n8, "LD L,n8");
-    table[0x36] = Instruction::new(12, 2, Cpu::ld_r8_n8, "LD [HL],n8");
+    table[0x36] = Instruction::new(8, 2, Cpu::ld_r8_n8, "LD [HL],n8");
     table[0x3E] = Instruction::new(8, 2, Cpu::ld_r8_n8, "LD A,n8");
 
-    // --- LD r16, n16
+    // --- LD r16, n16 ---
     table[0x01] = Instruction::new(12, 3, Cpu::ld_r16_n16, "LD BC,n16");
     table[0x11] = Instruction::new(12, 3, Cpu::ld_r16_n16, "LD DE,n16");
     table[0x21] = Instruction::new(12, 3, Cpu::ld_r16_n16, "LD HL,n16");
     table[0x31] = Instruction::new(12, 3, Cpu::ld_r16_n16, "LD SP,n16");
+
+    // --- LD [r16], A ---
+    table[0x02] = Instruction::new(8, 1, Cpu::ld_r16mem_a, "LD [BC],A");
+    table[0x12] = Instruction::new(8, 1, Cpu::ld_r16mem_a, "LD [DE],A");
+    table[0x22] = Instruction::new(8, 1, Cpu::ld_r16mem_a, "LD [HL+],A");
+    table[0x32] = Instruction::new(8, 1, Cpu::ld_r16mem_a, "LD [HL-],A");
+
+    // --- LD [n16], A ---
+    table[0xEA] = Instruction::new(16, 3, Cpu::ld_n16mem_a, "LD [n16],A");
+
+    // --- LDH [n8], A ---
+    table[0xE0] = Instruction::new(12, 2, Cpu::ldh_n8mem_a, "LDH [n8],A");
+
+    // --- LDH [C], A ---
+    table[0xE2] = Instruction::new(8, 1, Cpu::ldh_cmem_a, "LDH [C],A");
+
+    // --- LD A, [r16] ---
+    table[0x0A] = Instruction::new(8, 1, Cpu::ld_a_r16mem, "LD A,[BC]");
+    table[0x1A] = Instruction::new(8, 1, Cpu::ld_a_r16mem, "LD A,[DE]");
+    table[0x2A] = Instruction::new(8, 1, Cpu::ld_a_r16mem, "LD A,[HL+]");
+    table[0x3A] = Instruction::new(8, 1, Cpu::ld_a_r16mem, "LD A,[HL-]");
+
+    // --- LD A, [n16] ---
+    table[0xFA] = Instruction::new(16, 3, Cpu::ld_a_n16mem, "LD A,[n16]");
+
+    // --- LDH A, [n8] ---
+    table[0xF0] = Instruction::new(12, 2, Cpu::ld_a_n8mem, "LDH A,[n8]");
+
+    // --- LDH A, [C] ---
+    table[0xF2] = Instruction::new(8, 1, Cpu::ld_a_cmem, "LDH A,[C]");
 
     table
 }

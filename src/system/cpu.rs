@@ -122,6 +122,27 @@ impl Cpu {
         Ok(())
     }
 
+    // Get addr stored in 16-bit register from index:
+    // 0 = bc, 1 = de
+    // 2 = hl+, 3 = hl-
+    pub fn get_r16_mem(&mut self, reg: u8) -> Result<u16, CpuError> {
+        match reg {
+            0 => Ok(self.bc()),
+            1 => Ok(self.de()),
+            2 => {
+                let temp = self.hl();
+                self.set_hl(self.hl().wrapping_add(1));
+                Ok(temp)
+            }
+            3 => {
+                let temp = self.hl();
+                self.set_hl(self.hl().wrapping_add(1));
+                Ok(temp)
+            }
+            _ => Err(CpuError::RegisterError(reg)),
+        }
+    }
+
     // --- 16-bit register helpers ---
 
     pub fn af(&self) -> u16 {
