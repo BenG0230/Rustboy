@@ -122,5 +122,26 @@ pub fn load_instruction_table() -> [Instruction; 256] {
     // --- LDH A, [C] ---
     table[0xF2] = Instruction::new(8, 1, Cpu::ld_a_cmem, "LDH A,[C]");
 
+    // --- LD [n16], SP ---
+    table[0x08] = Instruction::new(20, 3, Cpu::ld_n16mem_sp, "LD [n16],SP");
+
+    // --- LD HL, SP + e8 ---
+    table[0xF8] = Instruction::new(12, 2, Cpu::ld_hl_sp_e8, "LD HL,SP+e8");
+
+    // --- LD SP, HL ---
+    table[0xF9] = Instruction::new(8, 1, Cpu::ld_sp_hl, "LD SP,HL");
+
+    // --- POP r16 ---
+    table[0xC1] = Instruction::new(12, 1, Cpu::pop_r16stk, "POP BC");
+    table[0xD1] = Instruction::new(12, 1, Cpu::pop_r16stk, "POP DE");
+    table[0xE1] = Instruction::new(12, 1, Cpu::pop_r16stk, "POP HL");
+    table[0xF1] = Instruction::new(12, 1, Cpu::pop_r16stk, "POP AF");
+
+    // --- PUSH r16 ---
+    table[0xC5] = Instruction::new(16, 1, Cpu::push_r16stk, "PUSH BC");
+    table[0xD5] = Instruction::new(16, 1, Cpu::push_r16stk, "PUSH DE");
+    table[0xE5] = Instruction::new(16, 1, Cpu::push_r16stk, "PUSH HL");
+    table[0xF5] = Instruction::new(16, 1, Cpu::push_r16stk, "PUSH AF");
+
     table
 }

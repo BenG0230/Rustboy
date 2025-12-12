@@ -58,6 +58,34 @@ impl Cpu {
         }
     }
 
+    // --- Flag helpers ---
+
+    pub fn get_zflag(&self) -> bool {
+        self.f & 0x80 != 0
+    }
+    pub fn get_nflag(&self) -> bool {
+        self.f & 0x40 != 0
+    }
+    pub fn get_hflag(&self) -> bool {
+        self.f & 0x20 != 0
+    }
+    pub fn get_cflag(&self) -> bool {
+        self.f & 0x10 != 0
+    }
+
+    pub fn set_zflag(&mut self, val: bool) {
+        if val { self.f |= 0x80 } else { self.f &= 0x7F }
+    }
+    pub fn set_nflag(&mut self, val: bool) {
+        if val { self.f |= 0x40 } else { self.f &= 0xBF }
+    }
+    pub fn set_hflag(&mut self, val: bool) {
+        if val { self.f |= 0x20 } else { self.f &= 0xDF }
+    }
+    pub fn set_cflag(&mut self, val: bool) {
+        if val { self.f |= 0x10 } else { self.f &= 0xEF }
+    }
+
     // --- Register helpers ---
 
     // Get value in an 8-bit register from index:
@@ -141,6 +169,33 @@ impl Cpu {
             }
             _ => Err(CpuError::RegisterError(reg)),
         }
+    }
+
+    // Get value stored in 16-bit register from index for stack operations:
+    // 0 = bc, 1 = de,
+    // 2 = hl, 3 = af
+    pub fn get_r16_stk(&self, reg: u8) -> Result<u16, CpuError> {
+        match reg {
+            0 => Ok(self.bc()),
+            1 => Ok(self.de()),
+            2 => Ok(self.hl()),
+            3 => Ok(self.af()),
+            _ => Err(CpuError::RegisterError(reg)),
+        }
+    }
+
+    // Set value stored in 16-bit register from index for stack operations:
+    // 0 = bc, 1 = de,
+    // 2 = hl, 3 = af
+    pub fn set_r16_stk(&mut self, reg: u8, val: u16) -> Result<(), CpuError> {
+        match reg {
+            0 => self.set_bc(val),
+            1 => self.set_de(val),
+            2 => self.set_hl(val),
+            3 => self.set_af(val),
+            _ => Err(CpuError::RegisterError(reg))?,
+        }
+        Ok(())
     }
 
     // --- 16-bit register helpers ---
