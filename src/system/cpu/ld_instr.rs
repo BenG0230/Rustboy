@@ -74,6 +74,7 @@ impl Cpu {
         let data = cpu.a; // Data from A register
         let addr = 0xFF00 + bus.read_byte(cpu.pc + 1)? as u16; // Address from Immediate val
 
+        // Set data
         bus.write_byte(addr, data)?;
 
         Ok(0)
@@ -116,9 +117,10 @@ impl Cpu {
 
     pub fn ld_a_n8mem(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Copy data from [0xFF00 + n8] to A
-        let addr = 0xFF00 + bus.read_byte(cpu.pc + 1)? as u16;
-        let data = bus.read_byte(addr)?;
+        let addr = 0xFF00 + bus.read_byte(cpu.pc + 1)? as u16; // Get address from immediate value
+        let data = bus.read_byte(addr)?; // Get data from address
 
+        // Set data
         cpu.a = data;
 
         Ok(0)
@@ -126,9 +128,10 @@ impl Cpu {
 
     pub fn ld_a_cmem(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Copy data from [0xFF00 + C] to A
-        let addr = 0xFF00 + cpu.c as u16;
-        let data = bus.read_byte(addr)?;
+        let addr = 0xFF00 + cpu.c as u16; // Get address from C
+        let data = bus.read_byte(addr)?; // Get data from address
 
+        // Set data
         cpu.a = data;
 
         Ok(0)
@@ -171,7 +174,6 @@ impl Cpu {
 
     pub fn ld_sp_hl(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Copy HL to SP
-
         let data = cpu.hl();
         cpu.sp = data;
 
@@ -180,16 +182,17 @@ impl Cpu {
 
     pub fn pop_r16stk(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Pop value from stack to r16stk
+        let dest = (opcode & 0b00110000) >> 4; // Get 
 
-        let dest = (opcode & 0b00110000) >> 4;
+        let data_low = bus.read_byte(cpu.sp)? as u16; // Get low byte of data 
+        cpu.sp += 1; // increment stack pointer
+        let data_high = (bus.read_byte(cpu.sp)? as u16) << 8; // Get high byte of data
+        cpu.sp += 1; // Increment stack pointer
 
-        let data_low = bus.read_byte(cpu.sp)? as u16;
-        cpu.sp += 1;
-        let data_high = (bus.read_byte(cpu.sp)? as u16) << 8;
-        cpu.sp += 1;
-
+        // get full 16-bit data
         let data = data_high | data_low;
 
+        // Set data
         cpu.set_r16_stk(dest, data)?;
 
         Ok(0)
@@ -200,10 +203,12 @@ impl Cpu {
 
         let source = (opcode & 0b00110000) >> 4;
 
-        let data = cpu.get_r16_stk(source)?;
+        let data = cpu.get_r16_stk(source)?; // Get data from register
+        // Split data into low and high bit
         let data_low = data as u8;
         let data_high = ((data & 0xFF00) >> 8) as u8;
 
+        // Put data in memory
         cpu.sp -= 1;
         bus.write_byte(cpu.sp, data_high)?;
         cpu.sp -= 1;

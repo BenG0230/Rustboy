@@ -1,7 +1,11 @@
 use crate::system::cpu::{Cpu, decode::Instruction};
 
-pub fn load_instruction_table() -> [Instruction; 256] {
-    let mut table = [Instruction::default(); 256];
+pub const fn load_instruction_table() -> [Instruction; 256] {
+    let const_instruction = Instruction::new(0, 1, Cpu::unknown_instr, "Unkown Instruction!");
+    let mut table = [const_instruction; 256];
+
+    // --- NOP ---
+    table[0x00] = Instruction::new(4, 1, Cpu::nop, "NOP");
 
     // --- LD r8, r8 ---
     // LD B, r8

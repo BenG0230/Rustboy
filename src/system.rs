@@ -28,7 +28,6 @@ impl System {
         //Each sub-system "catches up" to main system clock
         loop {
             let steps = self.cpu.step(&mut self.bus);
-            println!("steps: {}", steps);
         }
     }
 }

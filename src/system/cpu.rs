@@ -1,6 +1,7 @@
 use crate::system::bus::{Bus, BusError};
 use std::fmt;
 
+mod control_instr;
 mod decode;
 mod ld_instr;
 
@@ -21,7 +22,7 @@ impl fmt::Display for CpuError {
         match self {
             CpuError::BusError(err) => write!(f, "{}", err),
             CpuError::RegisterError(err) => write!(f, "Unknown register: {}", err),
-            CpuError::InstructionError(err) => write!(f, "Illegal instruction: {}", err),
+            CpuError::InstructionError(err) => write!(f, "Illegal instruction: {:#02X}", err),
         }
     }
 }
@@ -201,7 +202,7 @@ impl Cpu {
     // --- 16-bit register helpers ---
 
     pub fn af(&self) -> u16 {
-        ((self.a as u16) << 8) | (self.f as u16)
+        ((self.a as u16) << 8) | ((self.f & 0xF0) as u16)
     }
     pub fn bc(&self) -> u16 {
         ((self.b as u16) << 8) | (self.c as u16)
@@ -231,10 +232,16 @@ impl Cpu {
     }
 
     // --- Emulation ---
-    pub fn step(&mut self, bus: &mut Bus) -> u64 {
+    pub fn step(&mut self, bus: &mut Bus) -> u8 {
         // Perform next intruction
         // return cycle amount for instruction
-        println!("Woah stepping time!");
-        0
+
+        match self.decode(bus) {
+            Ok(c) => c,
+            Err(e) => {
+                println!("Error: {}", e);
+                0
+            }
+        }
     }
 }

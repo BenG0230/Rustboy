@@ -5,29 +5,20 @@ use crate::system::{
 
 mod instruct_table;
 
+static INSTRUCTION_TABLE: [Instruction; 256] = instruct_table::load_instruction_table();
+
 #[derive(Copy, Clone)]
 pub struct Instruction {
     cycles: u8,
-    bytes: u8,
+    bytes: u16,
     helper: fn(&mut Cpu, &mut Bus, u8) -> Result<u8, CpuError>,
     mneumonic: &'static str,
 }
 
-impl Default for Instruction {
-    fn default() -> Self {
-        Self {
-            cycles: 0,
-            bytes: 0,
-            helper: Cpu::unknown_instr,
-            mneumonic: "Unkown :P",
-        }
-    }
-}
-
 impl Instruction {
-    pub fn new(
+    pub const fn new(
         cycles: u8,
-        bytes: u8,
+        bytes: u16,
         helper: fn(&mut Cpu, &mut Bus, u8) -> Result<u8, CpuError>,
         mneumonic: &'static str,
     ) -> Self {
@@ -50,18 +41,20 @@ impl Cpu {
         Err(CpuError::InstructionError(opcode))
     }
 
-    fn fetch(&self, bus: &mut Bus) -> u8 {
-        match bus.read_byte(self.pc) {
-            Ok(opcode) => opcode,
-            Err(e) => {
-                println!("Error: {}", e);
-                0x10 // Return stop if error occured (i guess :P)
-                // TODO: Change this if it is bad
-            }
-        }
+    fn fetch(&self, bus: &mut Bus) -> Result<u8, CpuError> {
+        bus.read_byte(self.pc).map_err(CpuError::from)
     }
 
-    fn decode(&self, opcode: u8) {
-        println!("Im decoding {:#02X}", opcode);
+    pub fn decode(&mut self, bus: &mut Bus) -> Result<u8, CpuError> {
+        let opcode = self.fetch(bus)?;
+
+        let instruction = INSTRUCTION_TABLE[opcode as usize];
+
+        println!("{:#04X}: {}", self.pc, instruction.mneumonic);
+
+        self.pc += instruction.bytes;
+        let extra_cycles = instruction.execute(self, bus, opcode)?;
+
+        Ok(instruction.cycles + extra_cycles)
     }
 }
