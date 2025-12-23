@@ -27,7 +27,7 @@ impl System {
         //increment main system clock each loop according to cpu clock
         //Each sub-system "catches up" to main system clock
         loop {
-            std::thread::sleep(Duration::from_millis(100));
+            // std::thread::sleep(Duration::from_millis(10));
             let steps = self.cpu.step(&mut self.bus);
         }
     }

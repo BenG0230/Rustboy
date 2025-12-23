@@ -2,14 +2,12 @@ use std::{error::Error, fmt, fs};
 
 #[derive(Debug)]
 pub enum RomError {
-    WriteToRom(u16),
     OutOfBounds(u16),
 }
 
 impl fmt::Display for RomError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            RomError::WriteToRom(addr) => write!(f, "Cannot Write to ROM at address {:#04X}", addr),
             RomError::OutOfBounds(addr) => write!(f, "rom -> Address {:#04X} out of bounds", addr),
         }
     }
@@ -71,7 +69,7 @@ impl Rom {
     //              0xA000-BFFFF -> RAM
     pub fn write_byte(&mut self, addr: u16, val: u8) -> Result<(), RomError> {
         match addr {
-            0x0000..=0x7FFF => Err(RomError::WriteToRom(addr)),
+            0x0000..=0x7FFF => Ok(()), //TODO: Change to mbc control
             0xA000..=0xBFFF => {
                 let ram_addr = (addr - 0xA000) as usize;
                 if ram_addr >= self.ram.len() {

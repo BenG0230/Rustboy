@@ -159,9 +159,23 @@ pub const fn load_instruction_table() -> [Instruction; 256] {
     table[0xE5] = Instruction::new(16, 1, Cpu::push_r16stk, "PUSH HL");
     table[0xF5] = Instruction::new(16, 1, Cpu::push_r16stk, "PUSH AF");
 
-    // --- JP cc, n16 ---
+    // --- JP n16 ---
     table[0xC3] = Instruction::new(16, 3, Cpu::jp_n16, "JP n16");
+
+    // --- JP cc, n16 ---
+    table[0xCA] = Instruction::new(12, 3, Cpu::jp_z_n16, "JP Z,n16");
     table[0xC2] = Instruction::new(12, 3, Cpu::jp_nz_n16, "JP NZ,n16");
+    table[0xDA] = Instruction::new(12, 3, Cpu::jp_c_n16, "JP C,n16");
+    table[0xD2] = Instruction::new(12, 3, Cpu::jp_nc_n16, "JP NC,n16");
+
+    // --- JR e8 ---
+    table[0x18] = Instruction::new(12, 2, Cpu::jr_e8, "JR e8");
+
+    // --- JR cc, e8 ---
+    table[0x28] = Instruction::new(12, 2, Cpu::jr_z_e8, "JR Z,e8");
+    table[0x20] = Instruction::new(12, 2, Cpu::jr_nz_e8, "JR NZ,e8");
+    table[0x38] = Instruction::new(12, 2, Cpu::jr_c_e8, "JR C,e8");
+    table[0x30] = Instruction::new(12, 2, Cpu::jr_nc_e8, "JR NC,e8");
 
     // --- ADD A, r8 ---
     table[0x80] = Instruction::new(4, 1, Cpu::add_a_r8, "ADD A,B");
@@ -208,6 +222,16 @@ pub const fn load_instruction_table() -> [Instruction; 256] {
     table[0x2C] = Instruction::new(4, 1, Cpu::inc_r8, "INC L");
     table[0x34] = Instruction::new(4, 1, Cpu::inc_r8, "INC [HL]");
     table[0x3C] = Instruction::new(4, 1, Cpu::inc_r8, "INC A");
+
+    // --- DEC r8 ---
+    table[0x05] = Instruction::new(4, 1, Cpu::dec_r8, "DEC B");
+    table[0x0D] = Instruction::new(4, 1, Cpu::dec_r8, "DEC C");
+    table[0x15] = Instruction::new(4, 1, Cpu::dec_r8, "DEC D");
+    table[0x1D] = Instruction::new(4, 1, Cpu::dec_r8, "DEC E");
+    table[0x25] = Instruction::new(4, 1, Cpu::dec_r8, "DEC H");
+    table[0x2D] = Instruction::new(4, 1, Cpu::dec_r8, "DEC L");
+    table[0x35] = Instruction::new(4, 1, Cpu::dec_r8, "DEC [HL]");
+    table[0x3D] = Instruction::new(4, 1, Cpu::dec_r8, "DEC A");
 
     table
 }

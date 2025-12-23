@@ -55,7 +55,9 @@ impl Bus {
             0x0000..=0x7FFF | 0xA000..=0xBFFF => self.rom.read_byte(addr).map_err(BusError::from),
             0x8000..=0x9FFF => Ok(self.vram[(addr - 0x8000) as usize]),
             0xC000..=0xDFFF => Ok(self.wram[(addr - 0xC000) as usize]),
+            0xE000..=0xFDFF => Ok(self.wram[(addr - 0xC000 - 0x2000) as usize]),
             0xFE00..=0xFE9F => Ok(self.oam[(addr - 0xFE00) as usize]),
+            0xFEA0..=0xFEFF => Ok(0xFF),
             0xFF00..=0xFF7F => Ok(self.io_regs[(addr - 0xFF00) as usize]),
             0xFF80..=0xFFFE => Ok(self.hram[(addr - 0xFF80) as usize]),
             0xFFFF => Ok(self.ie_reg),
@@ -76,12 +78,21 @@ impl Bus {
                 self.wram[(addr - 0xC000) as usize] = val;
                 Ok(())
             }
+            0xE000..=0xFDFF => {
+                self.wram[(addr - 0xC000 - 0x2000) as usize] = val;
+                Ok(())
+            }
             0xFE00..=0xFE9F => {
                 self.oam[(addr - 0xFE00) as usize] = val;
                 Ok(())
             }
+            0xFEA0..=0xFEFF => Ok(()),
             0xFF00..=0xFF7F => {
                 self.io_regs[(addr - 0xFF00) as usize] = val;
+                if addr == 0xFF02 && val & 0x80 != 0 {
+                    print!("{}", self.read_byte(0xFF01)? as char);
+                    self.write_byte(0xFF02, val & 0x7F)?;
+                }
                 Ok(())
             }
             0xFF80..=0xFFFE => {

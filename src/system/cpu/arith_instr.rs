@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use crate::system::{
     bus::Bus,
     cpu::{Cpu, CpuError},
@@ -133,6 +135,25 @@ impl Cpu {
         cpu.set_nflag(false);
 
         cpu.set_hflag((data & 0xF) == 0xF);
+
+        Ok(cycles)
+    }
+
+    pub fn dec_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+        // Decrement r8
+
+        let source = (opcode & 0b00111000) >> 3;
+        let data = cpu.get_r8(bus, source)?;
+        let result = data.wrapping_sub(1);
+
+        let cycles = if source == 6 { 8 } else { 0 };
+
+        cpu.set_r8(bus, source, result)?;
+
+        cpu.set_zflag(result == 0);
+        cpu.set_nflag(true);
+
+        cpu.set_hflag(data == 0x10);
 
         Ok(cycles)
     }

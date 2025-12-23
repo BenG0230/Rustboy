@@ -52,10 +52,13 @@ impl Cpu {
 
         let instruction = INSTRUCTION_TABLE[opcode as usize];
 
-        println!("{:#04X}: {}", self.pc, instruction.mneumonic);
+        // println!(
+        //     "{:#06X}: {:02X} -> {}",
+        //     self.pc, opcode, instruction.mneumonic
+        // );
 
         let extra_cycles = instruction.execute(self, bus, opcode)?;
-        self.pc += instruction.bytes;
+        self.pc = self.pc.wrapping_add(instruction.bytes);
 
         if ime_pending {
             self.ime = true;

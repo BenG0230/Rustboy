@@ -255,6 +255,7 @@ impl Cpu {
                     Ok(c) => c,
                     Err(e) => {
                         println!("Error: {}", e);
+                        self.stopped = true;
                         return 0;
                     }
                 }
