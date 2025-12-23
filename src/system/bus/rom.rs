@@ -10,7 +10,7 @@ impl fmt::Display for RomError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             RomError::WriteToRom(addr) => write!(f, "Cannot Write to ROM at address {:#04X}", addr),
-            RomError::OutOfBounds(addr) => write!(f, "Address {:#04X} out of bounds", addr),
+            RomError::OutOfBounds(addr) => write!(f, "rom -> Address {:#04X} out of bounds", addr),
         }
     }
 }

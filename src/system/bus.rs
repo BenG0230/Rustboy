@@ -18,7 +18,7 @@ impl fmt::Display for BusError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             BusError::RomError(err) => write!(f, "{}", err),
-            BusError::OutOfBounds(addr) => write!(f, "Address {:#04X} out of bounds", addr),
+            BusError::OutOfBounds(addr) => write!(f, "Bus -> Address {:#04X} out of bounds", addr),
         }
     }
 }

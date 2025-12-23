@@ -46,14 +46,21 @@ impl Cpu {
     }
 
     pub fn decode(&mut self, bus: &mut Bus) -> Result<u8, CpuError> {
+        let ime_pending = self.ime_pending;
+
         let opcode = self.fetch(bus)?;
 
         let instruction = INSTRUCTION_TABLE[opcode as usize];
 
         println!("{:#04X}: {}", self.pc, instruction.mneumonic);
 
-        self.pc += instruction.bytes;
         let extra_cycles = instruction.execute(self, bus, opcode)?;
+        self.pc += instruction.bytes;
+
+        if ime_pending {
+            self.ime = true;
+            self.ime_pending = false;
+        }
 
         Ok(instruction.cycles + extra_cycles)
     }

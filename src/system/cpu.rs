@@ -1,8 +1,10 @@
 use crate::system::bus::{Bus, BusError};
 use std::fmt;
 
-mod control_instr;
+mod arith_instr;
+mod ctrl_instr;
 mod decode;
+mod jump_instr;
 mod ld_instr;
 
 pub enum CpuError {
@@ -39,6 +41,12 @@ pub struct Cpu {
     l: u8,
     sp: u16, // Stack pointer
     pc: u16, // Program counter
+    // --- Flags ---
+    ime: bool,
+    // --- Control ---
+    halted: bool,
+    stopped: bool,
+    ime_pending: bool, // Wether to change IME -> True after instruction (see IE)
 }
 
 impl Cpu {
@@ -56,6 +64,10 @@ impl Cpu {
             l: 0x4D,
             sp: 0xFFFE,
             pc: 0x0100,
+            ime: false,
+            halted: false,
+            stopped: false,
+            ime_pending: false,
         }
     }
 
@@ -236,12 +248,21 @@ impl Cpu {
         // Perform next intruction
         // return cycle amount for instruction
 
-        match self.decode(bus) {
-            Ok(c) => c,
-            Err(e) => {
-                println!("Error: {}", e);
+        if !(self.stopped) {
+            // Do timers
+            if !(self.halted) {
+                match self.decode(bus) {
+                    Ok(c) => c,
+                    Err(e) => {
+                        println!("Error: {}", e);
+                        return 0;
+                    }
+                }
+            } else {
                 0
             }
+        } else {
+            0
         }
     }
 }
