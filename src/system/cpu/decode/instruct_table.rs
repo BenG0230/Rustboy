@@ -266,6 +266,32 @@ pub const fn load_instruction_table() -> [Instruction; 256] {
     // --- AND A, n8 ---
     table[0xE6] = Instruction::new(8, 2, Cpu::and_a_n8, "AND A,n8");
 
+    // --- XOR A, r8 ---
+    table[0xA8] = Instruction::new(4, 1, Cpu::xor_a_r8, "XOR A,B");
+    table[0xA9] = Instruction::new(4, 1, Cpu::xor_a_r8, "XOR A,C");
+    table[0xAA] = Instruction::new(4, 1, Cpu::xor_a_r8, "XOR A,D");
+    table[0xAB] = Instruction::new(4, 1, Cpu::xor_a_r8, "XOR A,E");
+    table[0xAC] = Instruction::new(4, 1, Cpu::xor_a_r8, "XOR A,H");
+    table[0xAD] = Instruction::new(4, 1, Cpu::xor_a_r8, "XOR A,L");
+    table[0xAE] = Instruction::new(4, 1, Cpu::xor_a_r8, "XOR A,[HL]");
+    table[0xAF] = Instruction::new(4, 1, Cpu::xor_a_r8, "XOR A,A");
+
+    // --- XOR A, n8 ---
+    table[0xEE] = Instruction::new(8, 2, Cpu::xor_a_n8, "XOR A,n8");
+
+    // --- OR A, r8 ---
+    table[0xB0] = Instruction::new(4, 1, Cpu::or_a_r8, "OR A,B");
+    table[0xB1] = Instruction::new(4, 1, Cpu::or_a_r8, "OR A,C");
+    table[0xB2] = Instruction::new(4, 1, Cpu::or_a_r8, "OR A,D");
+    table[0xB3] = Instruction::new(4, 1, Cpu::or_a_r8, "OR A,E");
+    table[0xB4] = Instruction::new(4, 1, Cpu::or_a_r8, "OR A,H");
+    table[0xB5] = Instruction::new(4, 1, Cpu::or_a_r8, "OR A,L");
+    table[0xB6] = Instruction::new(4, 1, Cpu::or_a_r8, "OR A,[HL]");
+    table[0xB7] = Instruction::new(4, 1, Cpu::or_a_r8, "OR A,A");
+
+    // --- OR A, n8 ---
+    table[0xF6] = Instruction::new(8, 2, Cpu::or_a_n8, "OR A,n8");
+
     // --- CP A, r8 ---
     table[0xB8] = Instruction::new(4, 1, Cpu::cp_a_r8, "CP A,B");
     table[0xB9] = Instruction::new(4, 1, Cpu::cp_a_r8, "CP A,C");
