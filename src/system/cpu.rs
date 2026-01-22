@@ -2,10 +2,12 @@ use crate::system::bus::{Bus, BusError};
 use std::fmt;
 
 mod arith_instr;
+mod bitwise_instr;
 mod ctrl_instr;
 mod decode;
 mod jump_instr;
 mod ld_instr;
+mod subrout_instr;
 
 pub enum CpuError {
     BusError(BusError),
@@ -24,7 +26,7 @@ impl fmt::Display for CpuError {
         match self {
             CpuError::BusError(err) => write!(f, "{}", err),
             CpuError::RegisterError(err) => write!(f, "Unknown register: {}", err),
-            CpuError::InstructionError(err) => write!(f, "Illegal instruction: {:#02X}", err),
+            CpuError::InstructionError(err) => write!(f, "Illegal instruction: {:#04X}", err),
         }
     }
 }
@@ -177,7 +179,7 @@ impl Cpu {
             }
             3 => {
                 let temp = self.hl();
-                self.set_hl(self.hl().wrapping_add(1));
+                self.set_hl(self.hl().wrapping_sub(1));
                 Ok(temp)
             }
             _ => Err(CpuError::RegisterError(reg)),

@@ -88,6 +88,7 @@ impl Cpu {
             Ok(0)
         }
     }
+
     pub fn jr_nz_e8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Jump to address pc + e8 if zero flag is not set
         let data = bus.read_byte(cpu.pc + 1)? as i8; // Immediate signed 8-bit value 
@@ -101,6 +102,7 @@ impl Cpu {
             Ok(0)
         }
     }
+
     pub fn jr_c_e8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Jump to address pc + e8 if carry flag is set
         let data = bus.read_byte(cpu.pc + 1)? as i8; // Immediate signed 8-bit value 
@@ -114,6 +116,7 @@ impl Cpu {
             Ok(0)
         }
     }
+
     pub fn jr_nc_e8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Jump to address pc + e8 if carry flag is not set
         let data = bus.read_byte(cpu.pc + 1)? as i8; // Immediate signed 8-bit value 
@@ -126,5 +129,15 @@ impl Cpu {
         } else {
             Ok(0)
         }
+    }
+
+    pub fn jr_hl(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+        // Copy hl to pc
+
+        let data = cpu.hl();
+
+        cpu.pc = data;
+
+        Ok(0)
     }
 }

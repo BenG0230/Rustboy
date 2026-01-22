@@ -1,11 +1,10 @@
-use std::time::Duration;
-
 use crate::system::{
     bus::Bus,
     cpu::{Cpu, CpuError},
 };
 
 impl Cpu {
+    // --- 8-bit ---
     pub fn add_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Add r8 to A
         let source = opcode & 0b00000111; // Source register index from opcode
@@ -98,6 +97,89 @@ impl Cpu {
         Ok(0)
     }
 
+    pub fn sub_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+        // Subtract r8 from a
+
+        let source = opcode & 0b00000111;
+        let data = cpu.get_r8(bus, source)?;
+        let a = cpu.a;
+
+        let result = a.wrapping_sub(data);
+
+        let cycles = if source == 6 { 4 } else { 0 };
+
+        cpu.a = result;
+
+        cpu.set_zflag(result == 0);
+        cpu.set_nflag(true);
+
+        cpu.set_hflag((data & 0xF) > (a & 0xF)); // If borrow from bit 4
+        cpu.set_cflag(data > a); // If borrow
+
+        Ok(cycles)
+    }
+
+    pub fn sub_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+        // Subtract n8 from a
+        let data = bus.read_byte(cpu.pc + 1)?;
+        let a = cpu.a;
+
+        let result = a.wrapping_sub(data);
+
+        cpu.a = result;
+
+        cpu.set_zflag(result == 0);
+        cpu.set_nflag(true);
+
+        cpu.set_hflag((data & 0xF) > (a & 0xF)); // If borrow from bit 4
+        cpu.set_cflag(data > a); // If borrow
+
+        Ok(0)
+    }
+
+    pub fn sbc_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+        // Subtract r8 and carry from a
+
+        let source = opcode & 0b00000111;
+        let data = cpu.get_r8(bus, source)?;
+        let a = cpu.a;
+        let carry = cpu.get_cflag();
+
+        let result = ((a as u16) - (data as u16) - (carry as u16)) as u8;
+
+        let cycles = if source == 6 { 4 } else { 0 };
+
+        cpu.a = result;
+
+        cpu.set_zflag(result == 0);
+        cpu.set_nflag(true);
+
+        cpu.set_hflag((data & 0xF) > (a & 0xF)); // If borrow from bit 4
+        cpu.set_cflag(data > a); // If borrow
+
+        Ok(cycles)
+    }
+
+    pub fn sbc_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+        // Subtract r8 and carry from a
+
+        let data = bus.read_byte(cpu.pc + 1)?; // Immediate 8-bit value
+        let a = cpu.a;
+        let carry = cpu.get_cflag();
+
+        let result = ((a as u16) - (data as u16) - (carry as u16)) as u8;
+
+        cpu.a = result;
+
+        cpu.set_zflag(result == 0);
+        cpu.set_nflag(true);
+
+        cpu.set_hflag((data & 0xF) > (a & 0xF)); // If borrow from bit 4
+        cpu.set_cflag(data > a); // If borrow
+
+        Ok(0)
+    }
+
     pub fn cp_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Compare A with r8
 
@@ -118,6 +200,24 @@ impl Cpu {
         cpu.set_cflag(data > a); // If borrow
 
         Ok(cycles)
+    }
+
+    pub fn cp_a_n8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+        // Compare A with n8
+
+        let data = bus.read_byte(cpu.pc + 1)?; // Immediate 8-bit value
+        let a = cpu.a;
+
+        let result = a.wrapping_sub(data); // Calculate value
+
+        // set flags
+        cpu.set_zflag(result == 0); // If zero
+        cpu.set_nflag(true); // always 1
+
+        cpu.set_hflag((data & 0xF) > (a & 0xF)); // If borrow from bit 4
+        cpu.set_cflag(data > a); // If borrow
+
+        Ok(0)
     }
 
     pub fn inc_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
@@ -156,5 +256,29 @@ impl Cpu {
         cpu.set_hflag(data == 0x10);
 
         Ok(cycles)
+    }
+
+    // --- 16-bit ---
+
+    pub fn inc_r16(cpu: &mut Cpu, _bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+        // Increment r16 by 1
+
+        let source = (opcode & 0b00110000) >> 4;
+        let data = cpu.get_r16(source)?;
+
+        cpu.set_r16(source, data.wrapping_add(1))?;
+
+        Ok(0)
+    }
+
+    pub fn dec_r16(cpu: &mut Cpu, _bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+        // Decrement r16 by 1
+
+        let source = (opcode & 0b00110000) >> 4;
+        let data = cpu.get_r16(source)?;
+
+        cpu.set_r16(source, data.wrapping_sub(1))?;
+
+        Ok(0)
     }
 }

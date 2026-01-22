@@ -172,10 +172,34 @@ pub const fn load_instruction_table() -> [Instruction; 256] {
     table[0x18] = Instruction::new(12, 2, Cpu::jr_e8, "JR e8");
 
     // --- JR cc, e8 ---
-    table[0x28] = Instruction::new(12, 2, Cpu::jr_z_e8, "JR Z,e8");
-    table[0x20] = Instruction::new(12, 2, Cpu::jr_nz_e8, "JR NZ,e8");
-    table[0x38] = Instruction::new(12, 2, Cpu::jr_c_e8, "JR C,e8");
-    table[0x30] = Instruction::new(12, 2, Cpu::jr_nc_e8, "JR NC,e8");
+    table[0x28] = Instruction::new(8, 2, Cpu::jr_z_e8, "JR Z,e8");
+    table[0x20] = Instruction::new(8, 2, Cpu::jr_nz_e8, "JR NZ,e8");
+    table[0x38] = Instruction::new(8, 2, Cpu::jr_c_e8, "JR C,e8");
+    table[0x30] = Instruction::new(8, 2, Cpu::jr_nc_e8, "JR NC,e8");
+
+    // --- JR HL ---
+    table[0xE9] = Instruction::new(4, 1, Cpu::jr_hl, "JR HL");
+
+    // --- CALL n16 ---
+    table[0xCD] = Instruction::new(24, 3, Cpu::call_n16, "CALL n16");
+
+    // --- CALL cc, n16 ---
+    table[0xCC] = Instruction::new(12, 3, Cpu::call_z_n16, "CALL Z,n16");
+    table[0xC4] = Instruction::new(12, 3, Cpu::call_nz_n16, "CALL NZ,n16");
+    table[0xDC] = Instruction::new(12, 3, Cpu::call_c_n16, "CALL C,n16");
+    table[0xD4] = Instruction::new(12, 3, Cpu::call_nc_n16, "CALL NC,n16");
+
+    // --- RET ---
+    table[0xC9] = Instruction::new(16, 1, Cpu::ret, "RET");
+
+    // --- RET cc ---
+    table[0xC8] = Instruction::new(8, 1, Cpu::ret_z, "RET Z");
+    table[0xC0] = Instruction::new(8, 1, Cpu::ret_nz, "RET NZ");
+    table[0xD8] = Instruction::new(8, 1, Cpu::ret_c, "RET C");
+    table[0xD0] = Instruction::new(8, 1, Cpu::ret_nc, "RET NC");
+
+    // --- RETI ---
+    table[0xD9] = Instruction::new(16, 1, Cpu::reti, "RETI");
 
     // --- ADD A, r8 ---
     table[0x80] = Instruction::new(4, 1, Cpu::add_a_r8, "ADD A,B");
@@ -203,6 +227,45 @@ pub const fn load_instruction_table() -> [Instruction; 256] {
     // --- ADC A, n8 ---
     table[0xCE] = Instruction::new(8, 2, Cpu::adc_a_n8, "ADC A,n8");
 
+    // --- SUB A, r8 ---
+    table[0x90] = Instruction::new(4, 1, Cpu::sub_a_r8, "SUB A,B");
+    table[0x91] = Instruction::new(4, 1, Cpu::sub_a_r8, "SUB A,C");
+    table[0x92] = Instruction::new(4, 1, Cpu::sub_a_r8, "SUB A,D");
+    table[0x93] = Instruction::new(4, 1, Cpu::sub_a_r8, "SUB A,E");
+    table[0x94] = Instruction::new(4, 1, Cpu::sub_a_r8, "SUB A,H");
+    table[0x95] = Instruction::new(4, 1, Cpu::sub_a_r8, "SUB A,L");
+    table[0x96] = Instruction::new(4, 1, Cpu::sub_a_r8, "SUB A,[HL]");
+    table[0x97] = Instruction::new(4, 1, Cpu::sub_a_r8, "SUB A,A");
+
+    // --- SUB A, n8 ---
+    table[0xD6] = Instruction::new(8, 2, Cpu::sub_a_n8, "SUB A,n8");
+
+    // --- SBC A, r8 ---
+    table[0x98] = Instruction::new(4, 1, Cpu::sbc_a_r8, "SBC A,B");
+    table[0x99] = Instruction::new(4, 1, Cpu::sbc_a_r8, "SBC A,C");
+    table[0x9A] = Instruction::new(4, 1, Cpu::sbc_a_r8, "SBC A,D");
+    table[0x9B] = Instruction::new(4, 1, Cpu::sbc_a_r8, "SBC A,E");
+    table[0x9C] = Instruction::new(4, 1, Cpu::sbc_a_r8, "SBC A,H");
+    table[0x9D] = Instruction::new(4, 1, Cpu::sbc_a_r8, "SBC A,L");
+    table[0x9E] = Instruction::new(4, 1, Cpu::sbc_a_r8, "SBC A,[HL]");
+    table[0x9F] = Instruction::new(4, 1, Cpu::sbc_a_r8, "SBC A,A");
+
+    // --- SBC A, n8 ---
+    table[0xDE] = Instruction::new(8, 2, Cpu::sbc_a_n8, "SBC A,n8");
+
+    // --- AND A, r8 ---
+    table[0xA0] = Instruction::new(4, 1, Cpu::and_a_r8, "AND A,B");
+    table[0xA1] = Instruction::new(4, 1, Cpu::and_a_r8, "AND A,C");
+    table[0xA2] = Instruction::new(4, 1, Cpu::and_a_r8, "AND A,D");
+    table[0xA3] = Instruction::new(4, 1, Cpu::and_a_r8, "AND A,E");
+    table[0xA4] = Instruction::new(4, 1, Cpu::and_a_r8, "AND A,H");
+    table[0xA5] = Instruction::new(4, 1, Cpu::and_a_r8, "AND A,L");
+    table[0xA6] = Instruction::new(4, 1, Cpu::and_a_r8, "AND A,[HL]");
+    table[0xA7] = Instruction::new(4, 1, Cpu::and_a_r8, "AND A,A");
+
+    // --- AND A, n8 ---
+    table[0xE6] = Instruction::new(8, 2, Cpu::and_a_n8, "AND A,n8");
+
     // --- CP A, r8 ---
     table[0xB8] = Instruction::new(4, 1, Cpu::cp_a_r8, "CP A,B");
     table[0xB9] = Instruction::new(4, 1, Cpu::cp_a_r8, "CP A,C");
@@ -212,6 +275,9 @@ pub const fn load_instruction_table() -> [Instruction; 256] {
     table[0xBD] = Instruction::new(4, 1, Cpu::cp_a_r8, "CP A,L");
     table[0xBE] = Instruction::new(4, 1, Cpu::cp_a_r8, "CP A,[HL]");
     table[0xBE] = Instruction::new(4, 1, Cpu::cp_a_r8, "CP A,A");
+
+    // --- CP A, n8 ---
+    table[0xFE] = Instruction::new(8, 2, Cpu::cp_a_n8, "CP A,n8");
 
     // --- INC r8 ---
     table[0x04] = Instruction::new(4, 1, Cpu::inc_r8, "INC B");
@@ -223,6 +289,12 @@ pub const fn load_instruction_table() -> [Instruction; 256] {
     table[0x34] = Instruction::new(4, 1, Cpu::inc_r8, "INC [HL]");
     table[0x3C] = Instruction::new(4, 1, Cpu::inc_r8, "INC A");
 
+    // --- INC r16 ---
+    table[0x03] = Instruction::new(8, 1, Cpu::inc_r16, "INC BC");
+    table[0x13] = Instruction::new(8, 1, Cpu::inc_r16, "INC DE");
+    table[0x23] = Instruction::new(8, 1, Cpu::inc_r16, "INC HL");
+    table[0x33] = Instruction::new(8, 1, Cpu::inc_r16, "INC SP");
+
     // --- DEC r8 ---
     table[0x05] = Instruction::new(4, 1, Cpu::dec_r8, "DEC B");
     table[0x0D] = Instruction::new(4, 1, Cpu::dec_r8, "DEC C");
@@ -232,6 +304,12 @@ pub const fn load_instruction_table() -> [Instruction; 256] {
     table[0x2D] = Instruction::new(4, 1, Cpu::dec_r8, "DEC L");
     table[0x35] = Instruction::new(4, 1, Cpu::dec_r8, "DEC [HL]");
     table[0x3D] = Instruction::new(4, 1, Cpu::dec_r8, "DEC A");
+
+    // --- DEC r16 ---
+    table[0x0B] = Instruction::new(8, 1, Cpu::dec_r16, "DEC BC");
+    table[0x1B] = Instruction::new(8, 1, Cpu::dec_r16, "DEC DE");
+    table[0x2B] = Instruction::new(8, 1, Cpu::dec_r16, "DEC HL");
+    table[0x3B] = Instruction::new(8, 1, Cpu::dec_r16, "DEC SP");
 
     table
 }
