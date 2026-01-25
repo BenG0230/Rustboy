@@ -120,4 +120,15 @@ impl Cpu {
 
         Ok(0)
     }
+
+    pub fn cpl(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+        // Bitwise NOT
+
+        cpu.a = !cpu.a;
+
+        cpu.set_nflag(true);
+        cpu.set_hflag(true);
+
+        Ok(0)
+    }
 }

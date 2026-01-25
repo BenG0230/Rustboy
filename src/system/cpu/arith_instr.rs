@@ -202,10 +202,10 @@ impl Cpu {
         Ok(cycles)
     }
 
-    pub fn cp_a_n8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub fn cp_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Compare A with n8
 
-        let data = bus.read_byte(cpu.pc + 1)?; // Immediate 8-bit value
+        let data = bus.read_byte(cpu.pc + 1)?;
         let a = cpu.a;
 
         let result = a.wrapping_sub(data); // Calculate value
@@ -278,6 +278,43 @@ impl Cpu {
         let data = cpu.get_r16(source)?;
 
         cpu.set_r16(source, data.wrapping_sub(1))?;
+
+        Ok(0)
+    }
+
+    pub fn add_hl_r16(cpu: &mut Cpu, _bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+        // Add r16 to HL
+
+        let source = (opcode & 0b00110000) >> 4;
+        let data = cpu.get_r16(source)?;
+        let hl = cpu.hl();
+
+        let result = hl.wrapping_add(data);
+
+        cpu.set_hl(result);
+
+        cpu.set_nflag(false);
+
+        cpu.set_hflag(((data & 0xFFF) + (hl & 0xFFF)) > 0xFFF);
+        cpu.set_cflag(((data as u32) + (hl as u32)) > 0xFFFF);
+
+        Ok(0)
+    }
+
+    pub fn add_sp_e8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+        // Add e8 to SP
+
+        let data = bus.read_byte(cpu.pc + 1)? as i8 as i16 as u16; // extend sign to 16-bit
+        let sp = cpu.sp;
+
+        let result = sp.wrapping_add(data);
+        cpu.sp = result;
+
+        cpu.set_zflag(false);
+        cpu.set_nflag(false);
+
+        cpu.set_hflag((sp & 0x0F) + (data & 0x0F) > 0x0F);
+        cpu.set_cflag((sp & 0xFF) + (data & 0xFF) > 0xFF);
 
         Ok(0)
     }

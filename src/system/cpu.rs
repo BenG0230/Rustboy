@@ -7,11 +7,14 @@ mod ctrl_instr;
 mod decode;
 mod jump_instr;
 mod ld_instr;
+mod misc_instrs;
+mod shift_instr;
 mod subrout_instr;
 
 pub enum CpuError {
     BusError(BusError),
     RegisterError(u8),
+    VecError(u8),
     InstructionError(u8),
 }
 
@@ -26,6 +29,7 @@ impl fmt::Display for CpuError {
         match self {
             CpuError::BusError(err) => write!(f, "{}", err),
             CpuError::RegisterError(err) => write!(f, "Unknown register: {}", err),
+            CpuError::VecError(err) => write!(f, "Unknown vector: {}", err),
             CpuError::InstructionError(err) => write!(f, "Illegal instruction: {:#04X}", err),
         }
     }
@@ -245,6 +249,22 @@ impl Cpu {
         self.l = val as u8;
     }
 
+    // --- Misc helpers ---
+
+    pub fn get_vec(&self, vec: u8) -> Result<u16, CpuError> {
+        match vec {
+            0 => Ok(0x0000),
+            1 => Ok(0x0008),
+            2 => Ok(0x0010),
+            3 => Ok(0x0018),
+            4 => Ok(0x0020),
+            5 => Ok(0x0028),
+            6 => Ok(0x0030),
+            7 => Ok(0x0038),
+            _ => Err(CpuError::VecError(vec)),
+        }
+    }
+
     // --- Emulation ---
     pub fn step(&mut self, bus: &mut Bus) -> u8 {
         // Perform next intruction
@@ -254,18 +274,15 @@ impl Cpu {
             // Do timers
             if !(self.halted) {
                 match self.decode(bus) {
-                    Ok(c) => c,
+                    Ok(c) => return c,
                     Err(e) => {
                         println!("Error: {}", e);
                         self.stopped = true;
-                        return 0;
                     }
                 }
-            } else {
-                0
             }
-        } else {
-            0
         }
+
+        0
     }
 }

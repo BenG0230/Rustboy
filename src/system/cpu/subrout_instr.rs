@@ -234,4 +234,23 @@ impl Cpu {
 
         Ok(0)
     }
+
+    pub fn rst_vec(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+        // Call address vec
+
+        let dest = (opcode & 0b00111000) >> 3;
+        let addr = cpu.get_vec(dest)?;
+        let next_addr = cpu.pc.wrapping_add(1);
+        let next_addr_low = next_addr as u8;
+        let next_addr_high = ((next_addr & 0xFF00) >> 8) as u8;
+
+        cpu.sp -= 1;
+        bus.write_byte(cpu.sp, next_addr_high)?;
+        cpu.sp -= 1;
+        bus.write_byte(cpu.sp, next_addr_low)?;
+
+        cpu.pc = addr.wrapping_sub(1);
+
+        Ok(0)
+    }
 }

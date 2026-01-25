@@ -201,6 +201,16 @@ pub const fn load_instruction_table() -> [Instruction; 256] {
     // --- RETI ---
     table[0xD9] = Instruction::new(16, 1, Cpu::reti, "RETI");
 
+    // --- RST vec ---
+    table[0xC7] = Instruction::new(16, 1, Cpu::rst_vec, "RST $00");
+    table[0xCF] = Instruction::new(16, 1, Cpu::rst_vec, "RST $08");
+    table[0xD7] = Instruction::new(16, 1, Cpu::rst_vec, "RST $10");
+    table[0xDF] = Instruction::new(16, 1, Cpu::rst_vec, "RST $18");
+    table[0xE7] = Instruction::new(16, 1, Cpu::rst_vec, "RST $20");
+    table[0xEF] = Instruction::new(16, 1, Cpu::rst_vec, "RST $28");
+    table[0xF7] = Instruction::new(16, 1, Cpu::rst_vec, "RST $30");
+    table[0xFF] = Instruction::new(16, 1, Cpu::rst_vec, "RST $38");
+
     // --- ADD A, r8 ---
     table[0x80] = Instruction::new(4, 1, Cpu::add_a_r8, "ADD A,B");
     table[0x81] = Instruction::new(4, 1, Cpu::add_a_r8, "ADD A,C");
@@ -292,6 +302,9 @@ pub const fn load_instruction_table() -> [Instruction; 256] {
     // --- OR A, n8 ---
     table[0xF6] = Instruction::new(8, 2, Cpu::or_a_n8, "OR A,n8");
 
+    // --- CPL ---
+    table[0x2F] = Instruction::new(4, 1, Cpu::cpl, "CPL");
+
     // --- CP A, r8 ---
     table[0xB8] = Instruction::new(4, 1, Cpu::cp_a_r8, "CP A,B");
     table[0xB9] = Instruction::new(4, 1, Cpu::cp_a_r8, "CP A,C");
@@ -300,10 +313,19 @@ pub const fn load_instruction_table() -> [Instruction; 256] {
     table[0xBC] = Instruction::new(4, 1, Cpu::cp_a_r8, "CP A,H");
     table[0xBD] = Instruction::new(4, 1, Cpu::cp_a_r8, "CP A,L");
     table[0xBE] = Instruction::new(4, 1, Cpu::cp_a_r8, "CP A,[HL]");
-    table[0xBE] = Instruction::new(4, 1, Cpu::cp_a_r8, "CP A,A");
+    table[0xBF] = Instruction::new(4, 1, Cpu::cp_a_r8, "CP A,A");
 
     // --- CP A, n8 ---
     table[0xFE] = Instruction::new(8, 2, Cpu::cp_a_n8, "CP A,n8");
+
+    // --- ADD HL, r16 ---
+    table[0x09] = Instruction::new(8, 1, Cpu::add_hl_r16, "ADD HL,BC");
+    table[0x19] = Instruction::new(8, 1, Cpu::add_hl_r16, "ADD HL,DE");
+    table[0x29] = Instruction::new(8, 1, Cpu::add_hl_r16, "ADD HL,HL");
+    table[0x39] = Instruction::new(8, 1, Cpu::add_hl_r16, "ADD HL,SP");
+
+    // --- ADD SP, e8 ---
+    table[0xE8] = Instruction::new(16, 2, Cpu::add_sp_e8, "ADD SP,e8");
 
     // --- INC r8 ---
     table[0x04] = Instruction::new(4, 1, Cpu::inc_r8, "INC B");
@@ -336,6 +358,25 @@ pub const fn load_instruction_table() -> [Instruction; 256] {
     table[0x1B] = Instruction::new(8, 1, Cpu::dec_r16, "DEC DE");
     table[0x2B] = Instruction::new(8, 1, Cpu::dec_r16, "DEC HL");
     table[0x3B] = Instruction::new(8, 1, Cpu::dec_r16, "DEC SP");
+
+    // --- RLA ---
+    table[0x17] = Instruction::new(4, 1, Cpu::rla, "RLA");
+
+    // --- RRA ---
+    table[0x1F] = Instruction::new(4, 1, Cpu::rra, "RRA");
+
+    // --- RLCA ---
+    table[0x07] = Instruction::new(4, 1, Cpu::rlca, "RLCA");
+
+    // --- RRCA ---
+    table[0x0F] = Instruction::new(4, 1, Cpu::rrca, "RRCA");
+
+    // --- DAA ---
+    table[0x27] = Instruction::new(4, 1, Cpu::daa, "DAA");
+
+    // --- Carry flag ---
+    table[0x37] = Instruction::new(4, 1, Cpu::scf, "SCF");
+    table[0x3F] = Instruction::new(4, 1, Cpu::ccf, "CCF");
 
     table
 }
