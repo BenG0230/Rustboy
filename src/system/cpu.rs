@@ -2,6 +2,7 @@ use crate::system::bus::{Bus, BusError};
 use std::fmt;
 
 mod arith_instr;
+mod bitflag_instr;
 mod bitwise_instr;
 mod ctrl_instr;
 mod decode;
@@ -16,6 +17,7 @@ pub enum CpuError {
     RegisterError(u8),
     VecError(u8),
     InstructionError(u8),
+    PreInstructionError(u8),
 }
 
 impl From<BusError> for CpuError {
@@ -31,10 +33,14 @@ impl fmt::Display for CpuError {
             CpuError::RegisterError(err) => write!(f, "Unknown register: {}", err),
             CpuError::VecError(err) => write!(f, "Unknown vector: {}", err),
             CpuError::InstructionError(err) => write!(f, "Illegal instruction: {:#04X}", err),
+            CpuError::PreInstructionError(err) => {
+                write!(f, "Illegal prefixed instruction: {:#04X}", err)
+            }
         }
     }
 }
 
+#[derive(Debug)]
 pub struct Cpu {
     // --- Registers ---
     a: u8,
@@ -53,6 +59,8 @@ pub struct Cpu {
     halted: bool,
     stopped: bool,
     ime_pending: bool, // Wether to change IME -> True after instruction (see IE)
+    // --- Temp ---
+    instruction_count: u64,
 }
 
 impl Cpu {
@@ -74,6 +82,7 @@ impl Cpu {
             halted: false,
             stopped: false,
             ime_pending: false,
+            instruction_count: 0,
         }
     }
 
@@ -277,6 +286,7 @@ impl Cpu {
                     Ok(c) => return c,
                     Err(e) => {
                         println!("Error: {}", e);
+                        println!("{:#?}", self);
                         self.stopped = true;
                     }
                 }

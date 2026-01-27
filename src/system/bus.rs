@@ -90,7 +90,11 @@ impl Bus {
             0xFF00..=0xFF7F => {
                 self.io_regs[(addr - 0xFF00) as usize] = val;
                 if addr == 0xFF02 && val & 0x80 != 0 {
-                    print!("{}", self.read_byte(0xFF01)? as char);
+                    println!(
+                        "{:#04X} -> {}",
+                        self.read_byte(0xFF01)?,
+                        self.read_byte(0xFF01)? as char
+                    );
                     self.write_byte(0xFF02, val & 0x7F)?;
                 }
                 Ok(())

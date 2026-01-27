@@ -4,6 +4,15 @@ use crate::system::{
 };
 
 impl Cpu {
+    pub fn unknown_instr(_cpu: &mut Cpu, _bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+        // Either Instruction not implemented or tis illegal
+        Err(CpuError::InstructionError(opcode))
+    }
+
+    pub fn unknown_pre_instr(_cpu: &mut Cpu, _bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+        Err(CpuError::PreInstructionError(opcode))
+    }
+
     pub fn daa(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Change A into BCD
 

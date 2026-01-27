@@ -129,7 +129,7 @@ impl Cpu {
         // get full 16-bit data
         let data = data_high | data_low;
 
-        cpu.pc = data;
+        cpu.pc = data.wrapping_sub(1);
 
         Ok(0)
     }
@@ -147,7 +147,7 @@ impl Cpu {
             // get full 16-bit data
             let data = data_high | data_low;
 
-            cpu.pc = data;
+            cpu.pc = data.wrapping_sub(1);
 
             Ok(12)
         } else {
@@ -168,7 +168,7 @@ impl Cpu {
             // get full 16-bit data
             let data = data_high | data_low;
 
-            cpu.pc = data;
+            cpu.pc = data.wrapping_sub(1);
 
             Ok(12)
         } else {
@@ -189,7 +189,7 @@ impl Cpu {
             // get full 16-bit data
             let data = data_high | data_low;
 
-            cpu.pc = data;
+            cpu.pc = data.wrapping_sub(1);
 
             Ok(12)
         } else {
@@ -229,7 +229,7 @@ impl Cpu {
         // get full 16-bit data
         let data = data_high | data_low;
 
-        cpu.pc = data;
+        cpu.pc = data.wrapping_sub(1);
         cpu.ime = true;
 
         Ok(0)

@@ -2,10 +2,11 @@ use crate::system::{
     bus::Bus,
     cpu::{Cpu, CpuError},
 };
-
 mod instruct_table;
+mod prefix_table;
 
 static INSTRUCTION_TABLE: [Instruction; 256] = instruct_table::load_instruction_table();
+static PREFIX_TABLE: [Instruction; 256] = prefix_table::load_prefix_table();
 
 #[derive(Copy, Clone)]
 pub struct Instruction {
@@ -36,11 +37,6 @@ impl Instruction {
 }
 
 impl Cpu {
-    pub fn unknown_instr(_cpu: &mut Cpu, _bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
-        // Either Instruction not implemented or tis illegal
-        Err(CpuError::InstructionError(opcode))
-    }
-
     fn fetch(&self, bus: &mut Bus) -> Result<u8, CpuError> {
         bus.read_byte(self.pc).map_err(CpuError::from)
     }
@@ -50,12 +46,22 @@ impl Cpu {
 
         let opcode = self.fetch(bus)?;
 
-        let instruction = INSTRUCTION_TABLE[opcode as usize];
+        let instruction = if opcode == 0xCB {
+            // Prefix
+            // Take from prefix table instead
+            self.pc = self.pc.wrapping_add(1);
+            let opcode = self.fetch(bus)?;
+            PREFIX_TABLE[opcode as usize]
+        } else {
+            INSTRUCTION_TABLE[opcode as usize]
+        };
 
-        // println!(
-        //     "{:#06X}: {:#04X} -> {}",
-        //     self.pc, opcode, instruction.mneumonic
-        // );
+        self.instruction_count += 1;
+
+        println!(
+            "{} - {:#06X}: {:#04X} -> {}",
+            self.instruction_count, self.pc, opcode, instruction.mneumonic
+        );
 
         let extra_cycles = instruction.execute(self, bus, opcode)?;
         self.pc = self.pc.wrapping_add(instruction.bytes);
