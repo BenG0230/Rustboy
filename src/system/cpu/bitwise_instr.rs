@@ -4,7 +4,7 @@ use crate::system::{
 };
 
 impl Cpu {
-    pub fn and_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn and_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Bitwise AND A and r8
 
         let source = opcode & 0b00000111;
@@ -25,7 +25,7 @@ impl Cpu {
         Ok(cycles)
     }
 
-    pub fn and_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn and_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Bitwise AND A and n8
 
         let data = bus.read_byte(cpu.pc + 1)?;
@@ -43,7 +43,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn xor_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn xor_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // bitwise xor a and r8
 
         let source = opcode & 0b00000111;
@@ -64,7 +64,7 @@ impl Cpu {
         Ok(cycles)
     }
 
-    pub fn xor_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn xor_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // bitwise xor a and n8
 
         let data = bus.read_byte(cpu.pc + 1)?;
@@ -82,7 +82,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn or_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn or_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Bitwise OR A and r8
 
         let source = opcode & 0b00000111;
@@ -103,7 +103,7 @@ impl Cpu {
         Ok(cycles)
     }
 
-    pub fn or_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn or_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Bitwise OR A and r8
 
         let data = bus.read_byte(cpu.pc + 1)?;
@@ -121,7 +121,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn cpl(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn cpl(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Bitwise NOT
 
         cpu.a = !cpu.a;

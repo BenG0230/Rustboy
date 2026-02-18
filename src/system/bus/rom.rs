@@ -42,12 +42,15 @@ impl Rom {
         };
         self.ram = vec![0; ram_size];
 
+        self.read_header();
+
         Ok(())
     }
 
     // Read a single byte from ROM or RAM
-    // Maps address 0x0000-7FFFF -> ROM
-    //              0xA000-BFFFF -> RAM
+    // Maps address 0x0000-7FFF -> ROM
+    //              0xA000-BFFF -> RAM
+    // TODO: Update for MBC's
     pub fn read_byte(&self, addr: u16) -> Result<u8, RomError> {
         match addr {
             0x0000..=0x7FFF => self
@@ -67,6 +70,7 @@ impl Rom {
     // Read a single byte from RAM
     // Maps address 0x0000-7FFFF -> ROM (Rom write error)
     //              0xA000-BFFFF -> RAM
+    // TODO: Update for MBC's
     pub fn write_byte(&mut self, addr: u16, val: u8) -> Result<(), RomError> {
         match addr {
             0x0000..=0x7FFF => Ok(()), //TODO: Change to mbc control

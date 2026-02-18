@@ -4,7 +4,7 @@ use crate::system::{
 };
 
 impl Cpu {
-    pub fn call_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn call_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Push the next instruction address onto stack and jump to address n16
 
         let data = ((bus.read_byte(cpu.pc + 2)? as u16) << 8) | bus.read_byte(cpu.pc + 1)? as u16;
@@ -22,7 +22,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn call_z_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn call_z_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // If z flag is set
         // Push the next instruction onto stack and jump to address n16
 
@@ -46,7 +46,7 @@ impl Cpu {
         }
     }
 
-    pub fn call_nz_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn call_nz_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // If z flag is unset
         // Push the next instruction onto stack and jump to address n16
 
@@ -70,7 +70,7 @@ impl Cpu {
         }
     }
 
-    pub fn call_c_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn call_c_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // If c flag is set
         // Push the next instruction onto stack and jump to address n16
 
@@ -94,7 +94,7 @@ impl Cpu {
         }
     }
 
-    pub fn call_nc_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn call_nc_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // If c flag is unset
         // Push the next instruction onto stack and jump to address n16
 
@@ -118,7 +118,7 @@ impl Cpu {
         }
     }
 
-    pub fn ret(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ret(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Pop the value on the stack to PC
 
         let data_low = bus.read_byte(cpu.sp)? as u16; // Get low byte of data 
@@ -134,7 +134,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn ret_z(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ret_z(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // If z flag is set
         // Pop the value on the stack to PC
 
@@ -155,7 +155,7 @@ impl Cpu {
         }
     }
 
-    pub fn ret_nz(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ret_nz(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // If z flag is unset
         // Pop the value on the stack to PC
 
@@ -176,7 +176,7 @@ impl Cpu {
         }
     }
 
-    pub fn ret_c(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ret_c(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // If c flag is set
         // Pop the value on the stack to PC
 
@@ -197,7 +197,7 @@ impl Cpu {
         }
     }
 
-    pub fn ret_nc(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ret_nc(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // If c flag is unset
         // Pop the value on the stack to PC
 
@@ -210,7 +210,7 @@ impl Cpu {
             // get full 16-bit data
             let data = data_high | data_low;
 
-            cpu.pc = data;
+            cpu.pc = data.wrapping_sub(1);
 
             Ok(12)
         } else {
@@ -218,7 +218,7 @@ impl Cpu {
         }
     }
 
-    pub fn reti(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn reti(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Pop the value on the stack to PC then set IME
 
         let data_low = bus.read_byte(cpu.sp)? as u16; // Get low byte of data 
@@ -235,7 +235,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn rst_vec(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn rst_vec(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Call address vec
 
         let dest = (opcode & 0b00111000) >> 3;

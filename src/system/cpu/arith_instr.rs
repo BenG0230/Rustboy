@@ -5,7 +5,7 @@ use crate::system::{
 
 impl Cpu {
     // --- 8-bit ---
-    pub fn add_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn add_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Add r8 to A
         let source = opcode & 0b00000111; // Source register index from opcode
         let data = cpu.get_r8(bus, source)?; // Data from register
@@ -24,12 +24,12 @@ impl Cpu {
         cpu.set_nflag(false); // always 0
 
         cpu.set_hflag(((data & 0xF) + (a & 0xF)) > 0xF); // If lower nibble overflow
-        cpu.set_hflag(((data as u16) + (a as u16)) > 0xFF); // If overflow
+        cpu.set_cflag(((data as u16) + (a as u16)) > 0xFF); // If overflow
 
         Ok(cycles)
     }
 
-    pub fn add_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn add_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Add n8 to A
         let data = bus.read_byte(cpu.pc + 1)?; // Immediate 8-bit value
         let a = cpu.a;
@@ -44,12 +44,12 @@ impl Cpu {
         cpu.set_nflag(false); // always 0
 
         cpu.set_hflag(((data & 0xF) + (a & 0xF)) > 0xF); // If lower nibble overflow
-        cpu.set_hflag(((data as u16) + (a as u16)) > 0xFF); // If overflow
+        cpu.set_cflag(((data as u16) + (a as u16)) > 0xFF); // If overflow
 
         Ok(0)
     }
 
-    pub fn adc_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn adc_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Add r8 + carry to A
 
         let source = opcode & 0b00000111; // Source register index from opcode
@@ -75,12 +75,12 @@ impl Cpu {
         Ok(cycles)
     }
 
-    pub fn adc_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn adc_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Add n8 + carry to A
 
         let data = bus.read_byte(cpu.pc + 1)?; // Immediate 8-bit value
         let a = cpu.a;
-        let carry = if cpu.get_cflag() { 1 } else { 0 };
+        let carry = cpu.get_cflag();
 
         let result = ((data as u16) + (a as u16) + (carry as u16)) as u8; // Calculate value
 
@@ -91,13 +91,13 @@ impl Cpu {
         cpu.set_zflag(result == 0); // If zero
         cpu.set_nflag(false); // always 0
 
-        cpu.set_hflag(((data & 0xF) + (a & 0xF) + carry) > 0xF); // If overflow from low nibble
+        cpu.set_hflag(((data & 0xF) + (a & 0xF) + carry as u8) > 0xF); // If overflow from low nibble
         cpu.set_cflag(((data as u16) + (a as u16) + (carry as u16)) > 0xFF); // If overflow
 
         Ok(0)
     }
 
-    pub fn sub_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn sub_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Subtract r8 from a
 
         let source = opcode & 0b00000111;
@@ -119,7 +119,7 @@ impl Cpu {
         Ok(cycles)
     }
 
-    pub fn sub_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn sub_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Subtract n8 from a
         let data = bus.read_byte(cpu.pc + 1)?;
         let a = cpu.a;
@@ -137,7 +137,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn sbc_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn sbc_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Subtract r8 and carry from a
 
         let source = opcode & 0b00000111;
@@ -145,7 +145,7 @@ impl Cpu {
         let a = cpu.a;
         let carry = cpu.get_cflag();
 
-        let result = ((a as u16) - (data as u16) - (carry as u16)) as u8;
+        let result = a.wrapping_sub(data).wrapping_sub(carry as u8);
 
         let cycles = if source == 6 { 4 } else { 0 };
 
@@ -160,27 +160,27 @@ impl Cpu {
         Ok(cycles)
     }
 
-    pub fn sbc_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn sbc_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Subtract r8 and carry from a
 
         let data = bus.read_byte(cpu.pc + 1)?; // Immediate 8-bit value
         let a = cpu.a;
         let carry = cpu.get_cflag();
 
-        let result = ((a as u16) - (data as u16) - (carry as u16)) as u8;
+        let result = a.wrapping_sub(data).wrapping_sub(carry as u8);
 
         cpu.a = result;
 
         cpu.set_zflag(result == 0);
         cpu.set_nflag(true);
 
-        cpu.set_hflag((data & 0xF) > (a & 0xF)); // If borrow from bit 4
-        cpu.set_cflag(data > a); // If borrow
+        cpu.set_hflag(((data & 0xF) + carry as u8) & 0xF > (a & 0xF)); // If borrow from bit 4
+        cpu.set_cflag(data.wrapping_add(carry as u8) > a); // If borrow
 
         Ok(0)
     }
 
-    pub fn cp_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn cp_a_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Compare A with r8
 
         let source = opcode & 0b00000111; // Source register index from opcode
@@ -202,7 +202,7 @@ impl Cpu {
         Ok(cycles)
     }
 
-    pub fn cp_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn cp_a_n8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Compare A with n8
 
         let data = bus.read_byte(cpu.pc + 1)?;
@@ -220,7 +220,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn inc_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn inc_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Increment r8
 
         let source = (opcode & 0b00111000) >> 3;
@@ -239,7 +239,7 @@ impl Cpu {
         Ok(cycles)
     }
 
-    pub fn dec_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn dec_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Decrement r8
 
         let source = (opcode & 0b00111000) >> 3;
@@ -260,7 +260,7 @@ impl Cpu {
 
     // --- 16-bit ---
 
-    pub fn inc_r16(cpu: &mut Cpu, _bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn inc_r16(cpu: &mut Cpu, _bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Increment r16 by 1
 
         let source = (opcode & 0b00110000) >> 4;
@@ -271,7 +271,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn dec_r16(cpu: &mut Cpu, _bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn dec_r16(cpu: &mut Cpu, _bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Decrement r16 by 1
 
         let source = (opcode & 0b00110000) >> 4;
@@ -282,7 +282,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn add_hl_r16(cpu: &mut Cpu, _bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn add_hl_r16(cpu: &mut Cpu, _bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Add r16 to HL
 
         let source = (opcode & 0b00110000) >> 4;
@@ -301,7 +301,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn add_sp_e8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn add_sp_e8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Add e8 to SP
 
         let data = bus.read_byte(cpu.pc + 1)? as i8 as i16 as u16; // extend sign to 16-bit

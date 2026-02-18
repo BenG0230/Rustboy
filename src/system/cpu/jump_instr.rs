@@ -4,7 +4,7 @@ use crate::system::{
 };
 
 impl Cpu {
-    pub fn jp_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn jp_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Jump to address n16
 
         let data = ((bus.read_byte(cpu.pc + 2)? as u16) << 8) | bus.read_byte(cpu.pc + 1)? as u16;
@@ -13,7 +13,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn jp_z_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn jp_z_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Jump to address n16 if zero flag is set
         let data = ((bus.read_byte(cpu.pc + 2)? as u16) << 8) | bus.read_byte(cpu.pc + 1)? as u16;
 
@@ -25,7 +25,7 @@ impl Cpu {
         }
     }
 
-    pub fn jp_nz_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn jp_nz_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Jump to address n16 if zero flag is not set
 
         let data = ((bus.read_byte(cpu.pc + 2)? as u16) << 8) | bus.read_byte(cpu.pc + 1)? as u16;
@@ -38,7 +38,7 @@ impl Cpu {
         }
     }
 
-    pub fn jp_c_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn jp_c_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Jump to address n16 if carry flag is set
 
         let data = ((bus.read_byte(cpu.pc + 2)? as u16) << 8) | bus.read_byte(cpu.pc + 1)? as u16;
@@ -51,7 +51,7 @@ impl Cpu {
         }
     }
 
-    pub fn jp_nc_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn jp_nc_n16(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Jump to address n16 if carry flag is not set
 
         let data = ((bus.read_byte(cpu.pc + 2)? as u16) << 8) | bus.read_byte(cpu.pc + 1)? as u16;
@@ -64,7 +64,7 @@ impl Cpu {
         }
     }
 
-    pub fn jr_e8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn jr_e8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Jump to address pc + e8
         let data = bus.read_byte(cpu.pc + 1)? as i8; // Immediate signed 8-bit value
 
@@ -75,7 +75,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn jr_z_e8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn jr_z_e8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Jump to address pc + e8 if zero flag is set
         let data = bus.read_byte(cpu.pc + 1)? as i8; // Immediate signed 8-bit value 
 
@@ -89,7 +89,7 @@ impl Cpu {
         }
     }
 
-    pub fn jr_nz_e8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn jr_nz_e8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Jump to address pc + e8 if zero flag is not set
         let data = bus.read_byte(cpu.pc + 1)? as i8; // Immediate signed 8-bit value 
 
@@ -103,7 +103,7 @@ impl Cpu {
         }
     }
 
-    pub fn jr_c_e8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn jr_c_e8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Jump to address pc + e8 if carry flag is set
         let data = bus.read_byte(cpu.pc + 1)? as i8; // Immediate signed 8-bit value 
 
@@ -117,7 +117,7 @@ impl Cpu {
         }
     }
 
-    pub fn jr_nc_e8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn jr_nc_e8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Jump to address pc + e8 if carry flag is not set
         let data = bus.read_byte(cpu.pc + 1)? as i8; // Immediate signed 8-bit value 
 
@@ -131,12 +131,12 @@ impl Cpu {
         }
     }
 
-    pub fn jr_hl(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn jp_hl(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Copy hl to pc
 
         let data = cpu.hl();
 
-        cpu.pc = data;
+        cpu.pc = data.wrapping_sub(1);
 
         Ok(0)
     }

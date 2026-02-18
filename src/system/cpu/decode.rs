@@ -2,6 +2,7 @@ use crate::system::{
     bus::Bus,
     cpu::{Cpu, CpuError},
 };
+
 mod instruct_table;
 mod prefix_table;
 
@@ -44,27 +45,24 @@ impl Cpu {
     pub fn decode(&mut self, bus: &mut Bus) -> Result<u8, CpuError> {
         let ime_pending = self.ime_pending;
 
-        let opcode = self.fetch(bus)?;
+        let mut opcode = self.fetch(bus)?;
 
         let instruction = if opcode == 0xCB {
             // Prefix
             // Take from prefix table instead
             self.pc = self.pc.wrapping_add(1);
-            let opcode = self.fetch(bus)?;
+            opcode = self.fetch(bus)?;
             PREFIX_TABLE[opcode as usize]
         } else {
             INSTRUCTION_TABLE[opcode as usize]
         };
 
-        self.instruction_count += 1;
-
-        println!(
-            "{} - {:#06X}: {:#04X} -> {}",
-            self.instruction_count, self.pc, opcode, instruction.mneumonic
-        );
+        // self.trace_print(bus, instruction);
 
         let extra_cycles = instruction.execute(self, bus, opcode)?;
         self.pc = self.pc.wrapping_add(instruction.bytes);
+
+        self.instruction_count += (instruction.cycles + extra_cycles) as u64;
 
         if ime_pending {
             self.ime = true;
@@ -72,5 +70,43 @@ impl Cpu {
         }
 
         Ok(instruction.cycles + extra_cycles)
+    }
+
+    fn trace_print(&self, _bus: &mut Bus, instruct: Instruction) {
+        let mut flags = String::new();
+        if self.get_zflag() {
+            flags.push('Z');
+        } else {
+            flags.push('-');
+        }
+        if self.get_nflag() {
+            flags.push('N');
+        } else {
+            flags.push('-');
+        }
+        if self.get_hflag() {
+            flags.push('H');
+        } else {
+            flags.push('-');
+        }
+        if self.get_cflag() {
+            flags.push('C');
+        } else {
+            flags.push('-');
+        }
+
+        println!(
+            "A:{:02x} F:{} BC:{:04x} DE:{:04x} HL:{:04x} SP:{:04x} PC:{:04x} (cy: {}) {:#06x} {}",
+            self.a,
+            flags,
+            self.bc(),
+            self.de(),
+            self.hl(),
+            self.sp,
+            self.pc,
+            self.instruction_count,
+            self.pc,
+            instruct.mneumonic
+        );
     }
 }

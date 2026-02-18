@@ -5,7 +5,6 @@ use std::{error::Error, fmt};
 
 pub enum BusError {
     RomError(RomError),
-    OutOfBounds(u16),
 }
 
 impl From<RomError> for BusError {
@@ -18,7 +17,6 @@ impl fmt::Display for BusError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             BusError::RomError(err) => write!(f, "{}", err),
-            BusError::OutOfBounds(addr) => write!(f, "Bus -> Address {:#04X} out of bounds", addr),
         }
     }
 }
@@ -40,16 +38,28 @@ impl Bus {
             vram: [0; 8192], //TODO: Update read/write for vram based on map
             wram: [0; 8192],
             oam: [0; 160],
-            io_regs: [0; 128],
+            io_regs: [0; 128], //TODO: Update read/write for I/O Registers
             hram: [0; 127],
             ie_reg: 0,
         }
     }
 
+    // Load a rom file into memory
     pub fn load_rom(&mut self, rom_fname: &str) -> Result<(), Box<dyn Error>> {
         self.rom.load_rom(rom_fname)
     }
 
+    // Read a single byte from memory
+    // 0x0000-7FFF - ROM
+    // 0x8000-9FFF - VRAM
+    // 0xA000-BFFF - RAM
+    // 0xC000-DFFF - WRAM
+    // 0xE000-FDFF - Mirror of 0xC000-DDFF
+    // 0xFE00-FE9F - Object attribute memory
+    // 0xFEA0-FEFF - Not Usable
+    // 0xFF00-FF7F - I/O Registers
+    // 0xFF80-FFFE - High RAM
+    // 0xFFFF      - IE register
     pub fn read_byte(&self, addr: u16) -> Result<u8, BusError> {
         match addr {
             0x0000..=0x7FFF | 0xA000..=0xBFFF => self.rom.read_byte(addr).map_err(BusError::from),
@@ -61,10 +71,21 @@ impl Bus {
             0xFF00..=0xFF7F => Ok(self.io_regs[(addr - 0xFF00) as usize]),
             0xFF80..=0xFFFE => Ok(self.hram[(addr - 0xFF80) as usize]),
             0xFFFF => Ok(self.ie_reg),
-            _ => Err(BusError::OutOfBounds(addr)),
         }
     }
 
+    // Write a single byte to memory
+    // Returns Err if trying to write to a read-only range
+    // 0x0000-7FFF - ROM
+    // 0x8000-9FFF - VRAM
+    // 0xA000-BFFF - RAM
+    // 0xC000-DFFF - WRAM
+    // 0xE000-FDFF - Mirror of 0xC000-DDFF
+    // 0xFE00-FE9F - Object attribute memory
+    // 0xFEA0-FEFF - Not Usable
+    // 0xFF00-FF7F - I/O Registers
+    // 0xFF80-FFFE - High RAM
+    // 0xFFFF      - IE register
     pub fn write_byte(&mut self, addr: u16, val: u8) -> Result<(), BusError> {
         match addr {
             0x0000..=0x7FFF | 0xA000..=0xBFFF => {
@@ -88,14 +109,11 @@ impl Bus {
             }
             0xFEA0..=0xFEFF => Ok(()),
             0xFF00..=0xFF7F => {
+                // I/O range
                 self.io_regs[(addr - 0xFF00) as usize] = val;
-                if addr == 0xFF02 && val & 0x80 != 0 {
-                    println!(
-                        "{:#04X} -> {}",
-                        self.read_byte(0xFF01)?,
-                        self.read_byte(0xFF01)? as char
-                    );
-                    self.write_byte(0xFF02, val & 0x7F)?;
+                if addr == 0xFF02 && val == 0x81 {
+                    print!("{}", self.read_byte(0xFF01)? as char);
+                    self.write_byte(0xFF02, 0x00)?;
                 }
                 Ok(())
             }
@@ -107,7 +125,6 @@ impl Bus {
                 self.ie_reg = val;
                 Ok(())
             }
-            _ => Err(BusError::OutOfBounds(addr)),
         }
     }
 }

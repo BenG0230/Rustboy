@@ -4,7 +4,7 @@ use crate::system::{
 };
 
 impl Cpu {
-    pub fn ld_r8_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ld_r8_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Copy value from one r8 to another
         let source = opcode & 0b00000111; // Source register "index"
         let dest = (opcode & 0b00111000) >> 3; // Destination register "index"
@@ -19,7 +19,7 @@ impl Cpu {
         Ok(cycles)
     }
 
-    pub fn ld_r8_n8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ld_r8_n8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Copy n8 into r8
         let data = bus.read_byte(cpu.pc + 1)?; // Data from Immediate val
         let dest = (opcode & 0b00111000) >> 3; // Destination register "index"
@@ -33,7 +33,7 @@ impl Cpu {
         Ok(cycles)
     }
 
-    pub fn ld_r16_n16(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ld_r16_n16(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Copy n16 into r16
         // data little-endian 16-bit immediate val
         let data = ((bus.read_byte(cpu.pc + 2)? as u16) << 8) | bus.read_byte(cpu.pc + 1)? as u16;
@@ -45,7 +45,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn ld_r16mem_a(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ld_r16mem_a(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Copy value from A to [r16]
         let data = cpu.a; // Data from A register 
         let dest = (opcode & 0b00110000) >> 4; // r16 containing destination
@@ -57,7 +57,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn ld_n16mem_a(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ld_n16mem_a(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Copy value from A to [n16]
         let data = cpu.a; // Data from A register
         // addr from little-endian 16-bit immediate val
@@ -69,7 +69,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn ldh_n8mem_a(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ldh_n8mem_a(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Copy value from A to [0xFF00 + n8]
         let data = cpu.a; // Data from A register
         let addr = 0xFF00 + bus.read_byte(cpu.pc + 1)? as u16; // Address from Immediate val
@@ -80,7 +80,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn ldh_cmem_a(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ldh_cmem_a(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Copy value from A to [0xFF00 + C]
         let data = cpu.a; // Data from A register
         let addr = 0xFF00 + cpu.c as u16; // Address from 0xFF00 + C
@@ -91,7 +91,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn ld_a_r16mem(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ld_a_r16mem(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Copy data from [r16] to A
         let source = (opcode & 0b00110000) >> 4; // r16 containing source
         let addr = cpu.get_r16_mem(source)?; // Address of data
@@ -103,7 +103,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn ld_a_n16mem(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ld_a_n16mem(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Copy data from [n16] to A
         // Address of data
         let addr = ((bus.read_byte(cpu.pc + 2)? as u16) << 8) | bus.read_byte(cpu.pc + 1)? as u16;
@@ -115,7 +115,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn ld_a_n8mem(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ld_a_n8mem(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Copy data from [0xFF00 + n8] to A
         let addr = 0xFF00 + bus.read_byte(cpu.pc + 1)? as u16; // Get address from immediate value
         let data = bus.read_byte(addr)?; // Get data from address
@@ -126,7 +126,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn ld_a_cmem(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ld_a_cmem(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Copy data from [0xFF00 + C] to A
         let addr = 0xFF00 + cpu.c as u16; // Get address from C
         let data = bus.read_byte(addr)?; // Get data from address
@@ -137,7 +137,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn ld_n16mem_sp(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ld_n16mem_sp(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Copy SP into memory starting at [n16]
         // Split SP into high and low Bytes
         let data_high = (cpu.sp >> 8) as u8;
@@ -152,7 +152,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn ld_hl_sp_e8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ld_hl_sp_e8(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Load SP + e8 to HL
 
         let data_sp = cpu.sp; // Data from sp
@@ -172,7 +172,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn ld_sp_hl(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ld_sp_hl(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Copy HL to SP
         let data = cpu.hl();
         cpu.sp = data;
@@ -180,7 +180,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn pop_r16stk(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn pop_r16stk(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Pop value from stack to r16stk
         let dest = (opcode & 0b00110000) >> 4; // Get 
 
@@ -198,7 +198,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn push_r16stk(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn push_r16stk(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Push value from r16stk to stack
 
         let source = (opcode & 0b00110000) >> 4;

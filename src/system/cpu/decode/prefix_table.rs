@@ -1,4 +1,4 @@
-use crate::system::cpu::{Cpu, decode::Instruction};
+use crate::system::{Cpu, cpu::decode::Instruction};
 
 pub const fn load_prefix_table() -> [Instruction; 256] {
     let unknown_instruction = Instruction::new(

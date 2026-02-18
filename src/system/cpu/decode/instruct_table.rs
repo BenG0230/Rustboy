@@ -17,7 +17,7 @@ pub const fn load_instruction_table() -> [Instruction; 256] {
     table[0xF3] = Instruction::new(4, 1, Cpu::di, "DI");
 
     // --- EI ---
-    table[0xFB] = Instruction::new(4, 1, Cpu::ie, "IE");
+    table[0xFB] = Instruction::new(4, 1, Cpu::ei, "EI");
 
     // --- LD r8, r8 ---
     // LD B, r8
@@ -178,7 +178,7 @@ pub const fn load_instruction_table() -> [Instruction; 256] {
     table[0x30] = Instruction::new(8, 2, Cpu::jr_nc_e8, "JR NC,e8");
 
     // --- JR HL ---
-    table[0xE9] = Instruction::new(4, 1, Cpu::jr_hl, "JR HL");
+    table[0xE9] = Instruction::new(4, 1, Cpu::jp_hl, "JP HL");
 
     // --- CALL n16 ---
     table[0xCD] = Instruction::new(24, 3, Cpu::call_n16, "CALL n16");

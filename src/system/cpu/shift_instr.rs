@@ -6,7 +6,7 @@ use crate::system::{
 impl Cpu {
     // Non-prefixed
 
-    pub fn rla(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn rla(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Rotate A left through carry flag
 
         let a = cpu.a;
@@ -23,7 +23,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn rlca(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn rlca(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Rotate A left
 
         let a = cpu.a;
@@ -39,7 +39,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn rra(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn rra(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Rotate A right through carry flag
 
         let a = cpu.a;
@@ -56,7 +56,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn rrca(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn rrca(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Rotate A right
 
         let a = cpu.a;
@@ -73,7 +73,7 @@ impl Cpu {
     }
 
     // Prefixed
-    pub fn rlc_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn rlc_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Rotate r8 left
 
         let source = opcode & 0b00000111;
@@ -93,7 +93,7 @@ impl Cpu {
         Ok(cycles)
     }
 
-    pub fn rrc_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn rrc_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Rotate r8 right
 
         let source = opcode & 0b00000111;
@@ -113,7 +113,7 @@ impl Cpu {
         Ok(cycles)
     }
 
-    pub fn rl_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn rl_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Rotate r8 left through carry flag
 
         let source = opcode & 0b00000111;
@@ -135,7 +135,7 @@ impl Cpu {
         Ok(cycles)
     }
 
-    pub fn rr_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn rr_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Rotate r8 right through carry flag
 
         let source = opcode & 0b00000111;
@@ -157,7 +157,7 @@ impl Cpu {
         Ok(cycles)
     }
 
-    pub fn sla_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn sla_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Arithmetically left shift r8
 
         let source = opcode & 0b00000111;
@@ -178,7 +178,7 @@ impl Cpu {
         Ok(cycles)
     }
 
-    pub fn sra_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn sra_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Arithmetically right shift r8
 
         let source = opcode & 0b00000111;
@@ -199,7 +199,7 @@ impl Cpu {
         Ok(cycles)
     }
 
-    pub fn swap_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn swap_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Swap the high nibble and low nibble
 
         let source = opcode & 0b00000111;
@@ -220,7 +220,7 @@ impl Cpu {
         Ok(cycles)
     }
 
-    pub fn srl_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn srl_r8(cpu: &mut Cpu, bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
         // Logically right shift r8
 
         let source = opcode & 0b00000111;

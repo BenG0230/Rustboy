@@ -4,16 +4,24 @@ use crate::system::{
 };
 
 impl Cpu {
-    pub fn unknown_instr(_cpu: &mut Cpu, _bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn unknown_instr(
+        _cpu: &mut Cpu,
+        _bus: &mut Bus,
+        opcode: u8,
+    ) -> Result<u8, CpuError> {
         // Either Instruction not implemented or tis illegal
         Err(CpuError::InstructionError(opcode))
     }
 
-    pub fn unknown_pre_instr(_cpu: &mut Cpu, _bus: &mut Bus, opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn unknown_pre_instr(
+        _cpu: &mut Cpu,
+        _bus: &mut Bus,
+        opcode: u8,
+    ) -> Result<u8, CpuError> {
         Err(CpuError::PreInstructionError(opcode))
     }
 
-    pub fn daa(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn daa(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Change A into BCD
 
         let mut adjustment = 0;
@@ -55,7 +63,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn scf(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn scf(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Set the carry flag
 
         cpu.set_nflag(false);
@@ -66,7 +74,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub fn ccf(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn ccf(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         // Invert carry flag
 
         cpu.set_nflag(false);
