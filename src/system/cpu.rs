@@ -59,8 +59,6 @@ pub struct Cpu {
     halted: bool,
     stopped: bool,
     ime_pending: bool, // Wether to change IME -> True after instruction (see IE)
-    // --- Temp ---
-    instruction_count: u64,
 }
 
 impl Cpu {
@@ -82,7 +80,6 @@ impl Cpu {
             halted: false,
             stopped: false,
             ime_pending: false,
-            instruction_count: 0,
         }
     }
 
@@ -280,7 +277,6 @@ impl Cpu {
         // return cycle amount for instruction
 
         if !(self.stopped) {
-            // Do timers
             if !(self.halted) {
                 match self.decode(bus) {
                     Ok(c) => return c,

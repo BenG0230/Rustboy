@@ -42,7 +42,7 @@ impl Rom {
         };
         self.ram = vec![0; ram_size];
 
-        self.read_header();
+        // self.read_header();
 
         Ok(())
     }
@@ -97,7 +97,7 @@ impl Rom {
                 if bit == 3 {
                     idx += 1;
                 }
-                lines[idx].push(if byte & (1 << bit) != 0 { 'X' } else { '.' });
+                lines[idx].push(if byte & (1 << bit) != 0 { '#' } else { '.' });
             }
         }
         for line in &lines {

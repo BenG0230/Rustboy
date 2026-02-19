@@ -1,7 +1,10 @@
+mod io;
 mod rom;
 
 use rom::{Rom, RomError};
 use std::{error::Error, fmt};
+
+use io::Io;
 
 pub enum BusError {
     RomError(RomError),
@@ -26,7 +29,7 @@ pub struct Bus {
     vram: [u8; 8192],
     wram: [u8; 8192],
     oam: [u8; 160],
-    io_regs: [u8; 128],
+    io: Io,
     hram: [u8; 127],
     ie_reg: u8,
 }
@@ -38,7 +41,7 @@ impl Bus {
             vram: [0; 8192], //TODO: Update read/write for vram based on map
             wram: [0; 8192],
             oam: [0; 160],
-            io_regs: [0; 128], //TODO: Update read/write for I/O Registers
+            io: Io::new(),
             hram: [0; 127],
             ie_reg: 0,
         }
@@ -68,7 +71,7 @@ impl Bus {
             0xE000..=0xFDFF => Ok(self.wram[(addr - 0xC000 - 0x2000) as usize]),
             0xFE00..=0xFE9F => Ok(self.oam[(addr - 0xFE00) as usize]),
             0xFEA0..=0xFEFF => Ok(0xFF),
-            0xFF00..=0xFF7F => Ok(self.io_regs[(addr - 0xFF00) as usize]),
+            0xFF00..=0xFF7F => self.io.read_reg(addr),
             0xFF80..=0xFFFE => Ok(self.hram[(addr - 0xFF80) as usize]),
             0xFFFF => Ok(self.ie_reg),
         }
@@ -108,15 +111,7 @@ impl Bus {
                 Ok(())
             }
             0xFEA0..=0xFEFF => Ok(()),
-            0xFF00..=0xFF7F => {
-                // I/O range
-                self.io_regs[(addr - 0xFF00) as usize] = val;
-                if addr == 0xFF02 && val == 0x81 {
-                    print!("{}", self.read_byte(0xFF01)? as char);
-                    self.write_byte(0xFF02, 0x00)?;
-                }
-                Ok(())
-            }
+            0xFF00..=0xFF7F => self.io.write_reg(addr, val),
             0xFF80..=0xFFFE => {
                 self.hram[(addr - 0xFF80) as usize] = val;
                 Ok(())

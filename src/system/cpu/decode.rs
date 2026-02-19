@@ -62,8 +62,6 @@ impl Cpu {
         let extra_cycles = instruction.execute(self, bus, opcode)?;
         self.pc = self.pc.wrapping_add(instruction.bytes);
 
-        self.instruction_count += (instruction.cycles + extra_cycles) as u64;
-
         if ime_pending {
             self.ime = true;
             self.ime_pending = false;
@@ -96,7 +94,7 @@ impl Cpu {
         }
 
         println!(
-            "A:{:02x} F:{} BC:{:04x} DE:{:04x} HL:{:04x} SP:{:04x} PC:{:04x} (cy: {}) {:#06x} {}",
+            "A:{:02x} F:{} BC:{:04x} DE:{:04x} HL:{:04x} SP:{:04x} PC:{:04x} {:#06x} {}",
             self.a,
             flags,
             self.bc(),
@@ -104,7 +102,6 @@ impl Cpu {
             self.hl(),
             self.sp,
             self.pc,
-            self.instruction_count,
             self.pc,
             instruct.mneumonic
         );
