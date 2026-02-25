@@ -14,7 +14,10 @@ fn main() {
     let rom_fname = &args[1];
 
     match System::new(rom_fname) {
-        Ok(mut system) => system.run(),
+        Ok(mut system) => match system.run() {
+            Ok(_) => {}
+            Err(e) => println!("Error: {}", e),
+        },
         Err(e) => println!("Error: {}", e),
     }
 }

@@ -8,6 +8,7 @@ use io::Io;
 
 pub enum BusError {
     RomError(RomError),
+    OutOfRange(u16),
 }
 
 impl From<RomError> for BusError {
@@ -20,6 +21,7 @@ impl fmt::Display for BusError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             BusError::RomError(err) => write!(f, "{}", err),
+            BusError::OutOfRange(addr) => write!(f, "bus -> Address {:#04X} out of bounds", addr),
         }
     }
 }
@@ -121,5 +123,13 @@ impl Bus {
                 Ok(())
             }
         }
+    }
+
+    pub fn tick_timers(&mut self) {
+        self.io.tick_timers();
+    }
+
+    pub fn check_timer_interrupt(&self) -> bool {
+        self.io.check_timer_interrupt()
     }
 }

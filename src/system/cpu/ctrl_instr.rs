@@ -22,6 +22,7 @@ impl Cpu {
 
     pub(super) fn di(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         cpu.ime = false;
+        cpu.ime_pending = false;
 
         Ok(0)
     }

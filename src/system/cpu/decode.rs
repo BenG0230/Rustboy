@@ -48,7 +48,6 @@ impl Cpu {
         let mut opcode = self.fetch(bus)?;
 
         let instruction = if opcode == 0xCB {
-            // Prefix
             // Take from prefix table instead
             self.pc = self.pc.wrapping_add(1);
             opcode = self.fetch(bus)?;

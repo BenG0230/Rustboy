@@ -1,21 +1,29 @@
+mod timer;
+
 use crate::system::bus::BusError;
+use timer::Timers;
 
 pub struct Io {
     io_regs: [u8; 128],
+    timers: Timers,
 }
 
 impl Io {
     pub fn new() -> Self {
-        Self { io_regs: [0; 128] }
+        Self {
+            io_regs: [0; 128],
+            timers: Timers::new(),
+        }
     }
 
-    pub fn read_reg(&self, addr: u16) -> Result<u8, BusError> {
+    pub(super) fn read_reg(&self, addr: u16) -> Result<u8, BusError> {
         match addr {
+            0xFF04..0xFF07 => self.timers.read_reg(addr),
             _ => Ok(self.io_regs[(addr - 0xFF00) as usize]),
         }
     }
 
-    pub fn write_reg(&mut self, addr: u16, val: u8) -> Result<(), BusError> {
+    pub(super) fn write_reg(&mut self, addr: u16, val: u8) -> Result<(), BusError> {
         match addr {
             0xFF02 => {
                 // Serial transfer control
@@ -24,9 +32,22 @@ impl Io {
                     print!("{}", self.read_reg(0xFF01)? as char);
                     self.write_reg(0xFF02, 0x01)?;
                 }
+
+                Ok(())
             }
-            _ => self.io_regs[(addr - 0xFF00) as usize] = val,
+            0xFF04..0xFF07 => self.timers.write_reg(addr, val),
+            _ => {
+                self.io_regs[(addr - 0xFF00) as usize] = val;
+                Ok(())
+            }
         }
-        Ok(())
+    }
+
+    pub(super) fn tick_timers(&mut self) {
+        self.timers.tick();
+    }
+
+    pub(super) fn check_timer_interrupt(&self) -> bool {
+        self.timers.check_for_interrupt()
     }
 }

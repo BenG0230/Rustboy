@@ -1,11 +1,13 @@
 use crate::system::bus::{Bus, BusError};
 use std::fmt;
 
+mod decode;
+mod interrupts;
+
 mod arith_instr;
 mod bitflag_instr;
 mod bitwise_instr;
 mod ctrl_instr;
-mod decode;
 mod jump_instr;
 mod ld_instr;
 mod misc_instrs;
@@ -18,6 +20,7 @@ pub enum CpuError {
     VecError(u8),
     InstructionError(u8),
     PreInstructionError(u8),
+    InterruptError(u8),
 }
 
 impl From<BusError> for CpuError {
@@ -36,6 +39,7 @@ impl fmt::Display for CpuError {
             CpuError::PreInstructionError(err) => {
                 write!(f, "Illegal prefixed instruction: {:#04X}", err)
             }
+            CpuError::InterruptError(err) => write!(f, "Unknown interrupt: {:#010b}", err),
         }
     }
 }
@@ -272,23 +276,22 @@ impl Cpu {
     }
 
     // --- Emulation ---
-    pub fn step(&mut self, bus: &mut Bus) -> u8 {
-        // Perform next intruction
-        // return cycle amount for instruction
+    pub fn step(&mut self, bus: &mut Bus) -> Result<u8, CpuError> {
+        // TODO: Interrupts
+
+        let ie = bus.read_byte(0xFFFF)?;
+        let if_reg = bus.read_byte(0xFF0F)?;
+        if self.ime && (ie & if_reg) != 0 {
+            self.service_interrupts(bus)?;
+            return Ok(20); // servicing interrupt takes 5 m-cycles
+        }
 
         if !(self.stopped) {
             if !(self.halted) {
-                match self.decode(bus) {
-                    Ok(c) => return c,
-                    Err(e) => {
-                        println!("Error: {}", e);
-                        println!("{:#?}", self);
-                        self.stopped = true;
-                    }
-                }
+                return self.decode(bus);
             }
         }
 
-        0
+        Ok(0)
     }
 }
