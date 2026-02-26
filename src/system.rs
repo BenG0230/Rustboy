@@ -38,6 +38,7 @@ impl System {
                 self.bus.tick_timers();
                 if self.bus.check_timer_interrupt() {
                     // Set request bit for Timer interrupt HIGH
+                    println!(":3");
                     let interrupt_flag = self.bus.read_byte(0xFF0F)?;
 
                     self.bus.write_byte(0xFF0F, interrupt_flag | 0b00000100)?;

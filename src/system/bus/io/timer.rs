@@ -39,6 +39,7 @@ impl Timers {
                 self.overflow = false;
                 self.tima = self.tma;
                 self.requesting_interrupt = true;
+                println!("Overflow");
             } else {
                 self.overflow_count -= 1;
             }
@@ -81,11 +82,15 @@ impl Timers {
             0xFF06 => {
                 // If changing enabled tick timer if bit 1
                 if self.tma & 0b100 > 0 && val & 0b100 == 0 {
-                    self.tick_tima();
+                    let timer_bit = self.get_timer_bit();
+
+                    if (self.counter >> timer_bit) & 1 == 1 {
+                        self.tick_tima();
+                    }
                 }
 
                 // If changing timer bit (bit 1,0) check for timer tick
-                if self.tma & 0b11 != val & 0b11 {
+                if self.tma & 0b11 != val & 0b11 && self.timer_enabled() {
                     let timer_bit_old = self.get_timer_bit();
                     let timer_bit_new = match val & 0b11 {
                         0 => 9,
@@ -136,6 +141,7 @@ impl Timers {
         if self.tima == 0 {
             self.overflow = true;
             self.overflow_count = 4;
+            println!("Start overflow!");
         }
     }
 
