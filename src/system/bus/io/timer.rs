@@ -39,7 +39,6 @@ impl Timers {
                 self.overflow = false;
                 self.tima = self.tma;
                 self.requesting_interrupt = true;
-                println!("Overflow");
             } else {
                 self.overflow_count -= 1;
             }
@@ -80,8 +79,12 @@ impl Timers {
                 Ok(())
             }
             0xFF06 => {
+                self.tma = val;
+                Ok(())
+            }
+            0xFF07 => {
                 // If changing enabled tick timer if bit 1
-                if self.tma & 0b100 > 0 && val & 0b100 == 0 {
+                if self.tac & 0b100 > 0 && val & 0b100 == 0 {
                     let timer_bit = self.get_timer_bit();
 
                     if (self.counter >> timer_bit) & 1 == 1 {
@@ -90,7 +93,7 @@ impl Timers {
                 }
 
                 // If changing timer bit (bit 1,0) check for timer tick
-                if self.tma & 0b11 != val & 0b11 && self.timer_enabled() {
+                if self.tac & 0b11 != val & 0b11 && self.timer_enabled() {
                     let timer_bit_old = self.get_timer_bit();
                     let timer_bit_new = match val & 0b11 {
                         0 => 9,
@@ -107,11 +110,6 @@ impl Timers {
                         self.tick_tima();
                     }
                 }
-
-                self.tma = val;
-                Ok(())
-            }
-            0xFF07 => {
                 self.tac = val;
                 Ok(())
             }
@@ -119,8 +117,13 @@ impl Timers {
         }
     }
 
-    pub(super) fn check_for_interrupt(&self) -> bool {
-        self.requesting_interrupt
+    pub(super) fn check_for_interrupt(&mut self) -> bool {
+        if self.requesting_interrupt {
+            self.requesting_interrupt = false;
+            true
+        } else {
+            false
+        }
     }
 
     fn check_timer(&mut self) {
@@ -141,7 +144,6 @@ impl Timers {
         if self.tima == 0 {
             self.overflow = true;
             self.overflow_count = 4;
-            println!("Start overflow!");
         }
     }
 

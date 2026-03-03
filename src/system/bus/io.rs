@@ -18,7 +18,7 @@ impl Io {
 
     pub(super) fn read_reg(&self, addr: u16) -> Result<u8, BusError> {
         match addr {
-            0xFF04..0xFF07 => self.timers.read_reg(addr),
+            0xFF04..=0xFF07 => self.timers.read_reg(addr),
             _ => Ok(self.io_regs[(addr - 0xFF00) as usize]),
         }
     }
@@ -35,7 +35,7 @@ impl Io {
 
                 Ok(())
             }
-            0xFF04..0xFF07 => self.timers.write_reg(addr, val),
+            0xFF04..=0xFF07 => self.timers.write_reg(addr, val),
             _ => {
                 self.io_regs[(addr - 0xFF00) as usize] = val;
                 Ok(())
@@ -47,7 +47,7 @@ impl Io {
         self.timers.tick();
     }
 
-    pub(super) fn check_timer_interrupt(&self) -> bool {
+    pub(super) fn check_timer_interrupt(&mut self) -> bool {
         self.timers.check_for_interrupt()
     }
 }

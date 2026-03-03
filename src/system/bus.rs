@@ -129,7 +129,7 @@ impl Bus {
         self.io.tick_timers();
     }
 
-    pub fn check_timer_interrupt(&self) -> bool {
+    pub fn check_timer_interrupt(&mut self) -> bool {
         self.io.check_timer_interrupt()
     }
 }

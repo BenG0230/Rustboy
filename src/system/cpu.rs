@@ -281,9 +281,16 @@ impl Cpu {
 
         let ie = bus.read_byte(0xFFFF)?;
         let if_reg = bus.read_byte(0xFF0F)?;
-        if self.ime && (ie & if_reg) != 0 {
-            self.service_interrupts(bus)?;
-            return Ok(20); // servicing interrupt takes 5 m-cycles
+
+        if (ie & if_reg) != 0 {
+            if self.halted {
+                self.halted = false;
+            }
+
+            if self.ime {
+                self.service_interrupts(bus)?;
+                return Ok(20); // servicing interrupt takes 5 m-cycles
+            }
         }
 
         if !(self.stopped) {
@@ -292,6 +299,6 @@ impl Cpu {
             }
         }
 
-        Ok(0)
+        Ok(1)
     }
 }
