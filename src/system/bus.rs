@@ -6,6 +6,7 @@ use std::{error::Error, fmt};
 
 use io::Io;
 
+#[derive(Debug)]
 pub enum BusError {
     RomError(RomError),
     OutOfRange(u16),

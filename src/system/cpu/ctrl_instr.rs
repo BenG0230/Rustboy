@@ -8,7 +8,7 @@ impl Cpu {
         Ok(0)
     }
 
-    pub(super) fn halt(cpu: &mut Cpu, bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
+    pub(super) fn halt(cpu: &mut Cpu, _bus: &mut Bus, _opcode: u8) -> Result<u8, CpuError> {
         cpu.halted = true;
 
         Ok(0)

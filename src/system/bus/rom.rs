@@ -42,7 +42,7 @@ impl Rom {
         };
         self.ram = vec![0; ram_size];
 
-        // self.read_header();
+        self.read_header();
 
         Ok(())
     }

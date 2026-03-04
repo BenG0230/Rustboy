@@ -154,8 +154,8 @@ impl Cpu {
         cpu.set_zflag(result == 0);
         cpu.set_nflag(true);
 
-        cpu.set_hflag((data & 0xF) > (a & 0xF)); // If borrow from bit 4
-        cpu.set_cflag(data > a); // If borrow
+        cpu.set_hflag(((data & 0xF) + carry as u8) > (a & 0xF)); // If borrow from bit 4
+        cpu.set_cflag((data as u16) + carry as u16 > a as u16); // If borrow
 
         Ok(cycles)
     }
@@ -174,8 +174,8 @@ impl Cpu {
         cpu.set_zflag(result == 0);
         cpu.set_nflag(true);
 
-        cpu.set_hflag(((data & 0xF) + carry as u8) & 0xF > (a & 0xF)); // If borrow from bit 4
-        cpu.set_cflag(data.wrapping_add(carry as u8) > a); // If borrow
+        cpu.set_hflag(((data & 0xF) + carry as u8) > (a & 0xF)); // If borrow from bit 4
+        cpu.set_cflag((data as u16) + carry as u16 > a as u16); // If borrow
 
         Ok(0)
     }
@@ -253,7 +253,7 @@ impl Cpu {
         cpu.set_zflag(result == 0);
         cpu.set_nflag(true);
 
-        cpu.set_hflag(data == 0x10);
+        cpu.set_hflag(data & 0x0F == 0);
 
         Ok(cycles)
     }

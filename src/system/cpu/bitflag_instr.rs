@@ -14,7 +14,7 @@ impl Cpu {
 
         let cycles = if source == 6 { 4 } else { 0 };
 
-        cpu.set_zflag((data & bit_mask) > 0);
+        cpu.set_zflag((data & bit_mask) == 0);
         cpu.set_nflag(false);
 
         cpu.set_hflag(true);

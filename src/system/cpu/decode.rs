@@ -47,6 +47,8 @@ impl Cpu {
 
         let mut opcode = self.fetch(bus)?;
 
+        // self.trace_print(bus);
+
         let instruction = if opcode == 0xCB {
             // Take from prefix table instead
             self.pc = self.pc.wrapping_add(1);
@@ -55,8 +57,6 @@ impl Cpu {
         } else {
             INSTRUCTION_TABLE[opcode as usize]
         };
-
-        // self.trace_print(bus, instruction);
 
         let extra_cycles = instruction.execute(self, bus, opcode)?;
         self.pc = self.pc.wrapping_add(instruction.bytes);
@@ -69,40 +69,23 @@ impl Cpu {
         Ok(instruction.cycles + extra_cycles)
     }
 
-    fn trace_print(&self, _bus: &mut Bus, instruct: Instruction) {
-        let mut flags = String::new();
-        if self.get_zflag() {
-            flags.push('Z');
-        } else {
-            flags.push('-');
-        }
-        if self.get_nflag() {
-            flags.push('N');
-        } else {
-            flags.push('-');
-        }
-        if self.get_hflag() {
-            flags.push('H');
-        } else {
-            flags.push('-');
-        }
-        if self.get_cflag() {
-            flags.push('C');
-        } else {
-            flags.push('-');
-        }
-
+    fn trace_print(&self, bus: &mut Bus) {
         println!(
-            "A:{:02x} F:{} BC:{:04x} DE:{:04x} HL:{:04x} SP:{:04x} PC:{:04x} {:#06x} {}",
+            "A:{:02X} F:{:02X} B:{:02X} C:{:02X} D:{:02X} E:{:02X} H:{:02X} L:{:02X} SP:{:04X} PC:{:04X} PCMEM:{:02X},{:02X},{:02X},{:02X}",
             self.a,
-            flags,
-            self.bc(),
-            self.de(),
-            self.hl(),
+            self.f,
+            self.b,
+            self.c,
+            self.d,
+            self.e,
+            self.h,
+            self.l,
             self.sp,
             self.pc,
-            self.pc,
-            instruct.mneumonic
+            bus.read_byte(self.pc).unwrap(),
+            bus.read_byte(self.pc + 1).unwrap(),
+            bus.read_byte(self.pc + 2).unwrap(),
+            bus.read_byte(self.pc + 3).unwrap()
         );
     }
 }
