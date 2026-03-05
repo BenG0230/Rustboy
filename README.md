@@ -5,7 +5,7 @@ Ongoing
 
 currently only emulates the CPU printing serial output to stdout.
 
-## Usage
+### Usage
 ````
 ```
 # Build the emulator
@@ -14,4 +14,3 @@ cargo build
 # Run a test ROM
 cargo run -- <path-to-rom>
 ```
-
