@@ -5,9 +5,10 @@ Ongoing, currently only emulates the CPU printing serial output to stdout.
 
 ## Usage 
 ````
-```bash
+```
 # Build the emulator
 cargo build
 
 # Run a test ROM
 cargo run -- roms/cpu_instrs.gb
+```
