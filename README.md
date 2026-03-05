@@ -4,6 +4,7 @@ A Rust-based Gameboy emulator. Currently passes Blargg's CPU and Instruction Tim
 Ongoing, currently only emulates the CPU printing serial output to stdout.
 
 ## Usage 
-'''
-cargo run -- <path-to-test-rom> 
-'''
+````
+```
+cargo run -- <path-to-rom>
+```
