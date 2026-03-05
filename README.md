@@ -12,5 +12,6 @@ currently only emulates the CPU printing serial output to stdout.
 cargo build
 
 # Run a test ROM
-cargo run -- roms/cpu_instrs.gb
+cargo run -- <path-to-rom>
 ```
+
