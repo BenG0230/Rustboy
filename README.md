@@ -5,6 +5,9 @@ Ongoing, currently only emulates the CPU printing serial output to stdout.
 
 ## Usage 
 ````
-```
-cargo run -- <path-to-rom>
-```
+```bash
+# Build the emulator
+cargo build
+
+# Run a test ROM
+cargo run -- roms/cpu_instrs.gb
