@@ -38,21 +38,16 @@ pub struct Bus {
 }
 
 impl Bus {
-    pub fn new() -> Self {
-        Self {
-            rom: Rom::new(),
+    pub fn new(rom_fname: &str) -> Result<Self, Box<dyn Error>> {
+        Ok(Self {
+            rom: Rom::new(rom_fname)?,
             vram: [0; 8192], //TODO: Update read/write for vram based on map
             wram: [0; 8192],
             oam: [0; 160],
             io: Io::new(),
             hram: [0; 127],
             ie_reg: 0,
-        }
-    }
-
-    // Load a rom file into memory
-    pub fn load_rom(&mut self, rom_fname: &str) -> Result<(), Box<dyn Error>> {
-        self.rom.load_rom(rom_fname)
+        })
     }
 
     // Read a single byte from memory

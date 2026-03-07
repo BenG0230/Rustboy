@@ -1,6 +1,8 @@
 mod timer;
 
 use crate::system::bus::BusError;
+use std::io::Write;
+use std::io::stdout;
 use timer::Timers;
 
 pub struct Io {
@@ -11,7 +13,7 @@ pub struct Io {
 impl Io {
     pub fn new() -> Self {
         Self {
-            io_regs: [0; 128],
+            io_regs: [0xFF; 128],
             timers: Timers::new(),
         }
     }
@@ -19,7 +21,6 @@ impl Io {
     pub(super) fn read_reg(&self, addr: u16) -> Result<u8, BusError> {
         match addr {
             0xFF04..=0xFF07 => self.timers.read_reg(addr),
-            // 0xFF44 => Ok(0x90),
             _ => Ok(self.io_regs[(addr - 0xFF00) as usize]),
         }
     }
@@ -31,6 +32,7 @@ impl Io {
                 self.io_regs[(addr - 0xFF00) as usize] = val;
                 if val == 0x81 {
                     print!("{}", self.read_reg(0xFF01)? as char);
+                    stdout().flush().unwrap();
                     self.write_reg(0xFF02, 0x01)?;
                 }
 

@@ -2,6 +2,7 @@ mod bus;
 mod cpu;
 
 use std::error::Error;
+use std::time::Duration;
 
 use bus::Bus;
 use cpu::{Cpu, CpuError};
@@ -14,8 +15,7 @@ pub struct System {
 impl System {
     // Create a new system with rom path/<rom_fname>
     pub fn new(rom_fname: &str) -> Result<Self, Box<dyn Error>> {
-        let mut bus = Bus::new();
-        bus.load_rom(rom_fname)?;
+        let bus = Bus::new(rom_fname)?;
 
         Ok(Self {
             cpu: Cpu::new(),
@@ -29,6 +29,7 @@ impl System {
         //increment main system clock each loop according to cpu clock
         //Each sub-system "catches up" to main system clock
         loop {
+            // std::thread::sleep(Duration::from_nanos(500));
             let steps = self.cpu.step(&mut self.bus)?;
 
             for _ in 0..steps {
