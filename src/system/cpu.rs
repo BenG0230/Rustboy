@@ -188,12 +188,12 @@ impl Cpu {
             1 => Ok(self.de()),
             2 => {
                 let temp = self.hl();
-                self.set_hl(self.hl().wrapping_add(1));
+                self.set_hl(temp.wrapping_add(1));
                 Ok(temp)
             }
             3 => {
                 let temp = self.hl();
-                self.set_hl(self.hl().wrapping_sub(1));
+                self.set_hl(temp.wrapping_sub(1));
                 Ok(temp)
             }
             _ => Err(CpuError::RegisterError(reg)),
@@ -292,6 +292,8 @@ impl Cpu {
                 return Ok(20); // servicing interrupt takes 5 m-cycles
             }
         }
+
+        bus.write_byte(0xFF44, bus.read_byte(0xFF44)?.wrapping_add(101))?;
 
         if !(self.stopped) {
             if !(self.halted) {

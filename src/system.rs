@@ -1,15 +1,18 @@
 mod bus;
 mod cpu;
+mod ppu;
 
 use std::error::Error;
 use std::time::Duration;
 
-use bus::Bus;
+use bus::{Bus, BusError};
 use cpu::{Cpu, CpuError};
+use ppu::Ppu;
 
 pub struct System {
     cpu: Cpu,
     bus: Bus,
+    pub ppu: Ppu,
 }
 
 impl System {
@@ -20,28 +23,33 @@ impl System {
         Ok(Self {
             cpu: Cpu::new(),
             bus,
+            ppu: Ppu::new(),
         })
     }
 
-    // Run the loaded rom
-    pub fn run(&mut self) -> Result<(), CpuError> {
-        //TODO: each loop call sub-systems steps
-        //increment main system clock each loop according to cpu clock
-        //Each sub-system "catches up" to main system clock
-        loop {
-            // std::thread::sleep(Duration::from_nanos(500));
-            let steps = self.cpu.step(&mut self.bus)?;
+    pub fn render_tile_banks(&mut self, buffer: &mut Vec<u32>) {
+        self.ppu.render_tile_banks(&mut self.bus, buffer);
+    }
 
-            for _ in 0..steps {
-                // Tick timers for each
-                self.bus.tick_timers();
-                if self.bus.check_timer_interrupt() {
-                    // Set request bit for Timer interrupt HIGH
-                    let interrupt_flag = self.bus.read_byte(0xFF0F)?;
+    // Run next instruction
+    // Returns number of t-cycles taken
+    pub fn step_cpu(&mut self) -> Result<u8, CpuError> {
+        self.cpu.step(&mut self.bus)
+    }
 
-                    self.bus.write_byte(0xFF0F, interrupt_flag | 0b00000100)?;
-                }
+    // Tick subSystems by number of t-cycles
+    pub fn tick_subsystems(&mut self, steps: u8) -> Result<(), BusError> {
+        for _ in 0..steps {
+            // Tick timers for each
+            self.bus.tick_timers();
+            if self.bus.check_timer_interrupt() {
+                // Set request bit for Timer interrupt HIGH
+                let interrupt_flag = self.bus.read_byte(0xFF0F)?;
+
+                self.bus.write_byte(0xFF0F, interrupt_flag | 0b00000100)?;
             }
         }
+
+        Ok(())
     }
 }

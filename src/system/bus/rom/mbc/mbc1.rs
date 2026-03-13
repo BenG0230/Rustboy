@@ -62,11 +62,6 @@ impl super::MbcTrait for Mbc1 {
 
                 let banked_addr = bank_number * 0x4000 + (addr as usize - 0x4000);
 
-                // println!(
-                //     "{:#06X}, {:#04b}, {:#07b}-> {:#06X}",
-                //     addr, self.reg2, self.reg1, banked_addr
-                // );
-
                 self.rom
                     .get(banked_addr)
                     .copied()

@@ -29,7 +29,6 @@ impl MbcTrait for Mbc {
         match self {
             Mbc::Mbc0(mbc) => mbc.read_byte(addr),
             Mbc::Mbc1(mbc) => mbc.read_byte(addr),
-            _ => Err(super::RomError::NoROM),
         }
     }
 
@@ -37,7 +36,6 @@ impl MbcTrait for Mbc {
         match self {
             Mbc::Mbc0(mbc) => mbc.write_byte(addr, val),
             Mbc::Mbc1(mbc) => mbc.write_byte(addr, val),
-            _ => Err(super::RomError::NoROM),
         }
     }
 }
