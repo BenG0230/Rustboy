@@ -12,9 +12,9 @@ impl Cpu {
         let next_addr_low = next_addr as u8;
         let next_addr_high = ((next_addr & 0xFF00) >> 8) as u8;
 
-        cpu.sp -= 1;
+        cpu.sp = cpu.sp.wrapping_sub(1);
         bus.write_byte(cpu.sp, next_addr_high)?;
-        cpu.sp -= 1;
+        cpu.sp = cpu.sp.wrapping_sub(1);
         bus.write_byte(cpu.sp, next_addr_low)?;
 
         cpu.pc = data.wrapping_sub(3);
@@ -33,9 +33,9 @@ impl Cpu {
             let next_addr_low = next_addr as u8;
             let next_addr_high = ((next_addr & 0xFF00) >> 8) as u8;
 
-            cpu.sp -= 1;
+            cpu.sp = cpu.sp.wrapping_sub(1);
             bus.write_byte(cpu.sp, next_addr_high)?;
-            cpu.sp -= 1;
+            cpu.sp = cpu.sp.wrapping_sub(1);
             bus.write_byte(cpu.sp, next_addr_low)?;
 
             cpu.pc = data.wrapping_sub(3);
@@ -57,9 +57,9 @@ impl Cpu {
             let next_addr_low = next_addr as u8;
             let next_addr_high = ((next_addr & 0xFF00) >> 8) as u8;
 
-            cpu.sp -= 1;
+            cpu.sp = cpu.sp.wrapping_sub(1);
             bus.write_byte(cpu.sp, next_addr_high)?;
-            cpu.sp -= 1;
+            cpu.sp = cpu.sp.wrapping_sub(1);
             bus.write_byte(cpu.sp, next_addr_low)?;
 
             cpu.pc = data.wrapping_sub(3);
@@ -81,9 +81,9 @@ impl Cpu {
             let next_addr_low = next_addr as u8;
             let next_addr_high = ((next_addr & 0xFF00) >> 8) as u8;
 
-            cpu.sp -= 1;
+            cpu.sp = cpu.sp.wrapping_sub(1);
             bus.write_byte(cpu.sp, next_addr_high)?;
-            cpu.sp -= 1;
+            cpu.sp = cpu.sp.wrapping_sub(1);
             bus.write_byte(cpu.sp, next_addr_low)?;
 
             cpu.pc = data.wrapping_sub(3);
@@ -105,9 +105,9 @@ impl Cpu {
             let next_addr_low = next_addr as u8;
             let next_addr_high = ((next_addr & 0xFF00) >> 8) as u8;
 
-            cpu.sp -= 1;
+            cpu.sp = cpu.sp.wrapping_sub(1);
             bus.write_byte(cpu.sp, next_addr_high)?;
-            cpu.sp -= 1;
+            cpu.sp = cpu.sp.wrapping_sub(1);
             bus.write_byte(cpu.sp, next_addr_low)?;
 
             cpu.pc = data.wrapping_sub(3);
@@ -122,9 +122,9 @@ impl Cpu {
         // Pop the value on the stack to PC
 
         let data_low = bus.read_byte(cpu.sp)? as u16; // Get low byte of data 
-        cpu.sp += 1; // increment stack pointer
+        cpu.sp = cpu.sp.wrapping_add(1);
         let data_high = (bus.read_byte(cpu.sp)? as u16) << 8; // Get high byte of data
-        cpu.sp += 1; // Increment stack pointer
+        cpu.sp = cpu.sp.wrapping_add(1);
 
         // get full 16-bit data
         let data = data_high | data_low;
@@ -140,9 +140,9 @@ impl Cpu {
 
         if cpu.get_zflag() {
             let data_low = bus.read_byte(cpu.sp)? as u16; // Get low byte of data 
-            cpu.sp += 1; // increment stack pointer
+            cpu.sp = cpu.sp.wrapping_add(1);
             let data_high = (bus.read_byte(cpu.sp)? as u16) << 8; // Get high byte of data
-            cpu.sp += 1; // Increment stack pointer
+            cpu.sp = cpu.sp.wrapping_add(1);
 
             // get full 16-bit data
             let data = data_high | data_low;
@@ -161,9 +161,9 @@ impl Cpu {
 
         if !cpu.get_zflag() {
             let data_low = bus.read_byte(cpu.sp)? as u16; // Get low byte of data 
-            cpu.sp += 1; // increment stack pointer
+            cpu.sp = cpu.sp.wrapping_add(1);
             let data_high = (bus.read_byte(cpu.sp)? as u16) << 8; // Get high byte of data
-            cpu.sp += 1; // Increment stack pointer
+            cpu.sp = cpu.sp.wrapping_add(1);
 
             // get full 16-bit data
             let data = data_high | data_low;
@@ -182,9 +182,9 @@ impl Cpu {
 
         if cpu.get_cflag() {
             let data_low = bus.read_byte(cpu.sp)? as u16; // Get low byte of data 
-            cpu.sp += 1; // increment stack pointer
+            cpu.sp = cpu.sp.wrapping_add(1);
             let data_high = (bus.read_byte(cpu.sp)? as u16) << 8; // Get high byte of data
-            cpu.sp += 1; // Increment stack pointer
+            cpu.sp = cpu.sp.wrapping_add(1);
 
             // get full 16-bit data
             let data = data_high | data_low;
@@ -203,9 +203,9 @@ impl Cpu {
 
         if !cpu.get_cflag() {
             let data_low = bus.read_byte(cpu.sp)? as u16; // Get low byte of data 
-            cpu.sp += 1; // increment stack pointer
+            cpu.sp = cpu.sp.wrapping_add(1);
             let data_high = (bus.read_byte(cpu.sp)? as u16) << 8; // Get high byte of data
-            cpu.sp += 1; // Increment stack pointer
+            cpu.sp = cpu.sp.wrapping_add(1);
 
             // get full 16-bit data
             let data = data_high | data_low;
@@ -222,9 +222,9 @@ impl Cpu {
         // Pop the value on the stack to PC then set IME
 
         let data_low = bus.read_byte(cpu.sp)? as u16; // Get low byte of data 
-        cpu.sp += 1; // increment stack pointer
+        cpu.sp = cpu.sp.wrapping_add(1);
         let data_high = (bus.read_byte(cpu.sp)? as u16) << 8; // Get high byte of data
-        cpu.sp += 1; // Increment stack pointer
+        cpu.sp = cpu.sp.wrapping_add(1);
 
         // get full 16-bit data
         let data = data_high | data_low;
@@ -244,9 +244,9 @@ impl Cpu {
         let next_addr_low = next_addr as u8;
         let next_addr_high = ((next_addr & 0xFF00) >> 8) as u8;
 
-        cpu.sp -= 1;
+        cpu.sp = cpu.sp.wrapping_sub(1);
         bus.write_byte(cpu.sp, next_addr_high)?;
-        cpu.sp -= 1;
+        cpu.sp = cpu.sp.wrapping_sub(1);
         bus.write_byte(cpu.sp, next_addr_low)?;
 
         cpu.pc = addr.wrapping_sub(1);

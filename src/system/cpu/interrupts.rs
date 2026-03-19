@@ -33,9 +33,9 @@ impl super::Cpu {
         let current_addr_low = current_addr as u8;
         let current_addr_high = ((current_addr & 0xFF00) >> 8) as u8;
 
-        self.sp -= 1;
+        self.sp = self.sp.wrapping_sub(1);
         bus.write_byte(self.sp, current_addr_high)?;
-        self.sp -= 1;
+        self.sp = self.sp.wrapping_sub(1);
         bus.write_byte(self.sp, current_addr_low)?;
 
         self.pc = addr;

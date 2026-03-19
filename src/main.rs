@@ -8,8 +8,14 @@ use std::time::Instant;
 use system::System;
 use window::Window;
 
-const WIDTH: usize = 128;
-const HEIGHT: usize = 192;
+const TILES_WIDTH: usize = 128;
+const TILES_HEIGHT: usize = 192;
+
+const TILE_MAP_WIDTH: usize = 256;
+const TILE_MAP_HEIGHT: usize = 512;
+
+const MAIN_WIDTH: usize = 160;
+const MAIN_HEIGHT: usize = 144;
 
 fn main() {
     let args: Vec<_> = env::args().collect();
@@ -22,16 +28,19 @@ fn main() {
     let rom_fname = &args[1];
 
     let mut system = System::new(rom_fname).unwrap_or_else(|e| panic!("{e}"));
-    let mut window = Window::new(WIDTH, HEIGHT, 4);
+
+    // let mut main_window = Window::new(MAIN_WIDTH, MAIN_HEIGHT, 4);
+    // let mut tiles_window = Window::new(TILES_WIDTH, TILES_HEIGHT, 4);
+    let mut tile_map_window = Window::new(TILE_MAP_WIDTH, TILE_MAP_HEIGHT, 2);
 
     let mut last_frame = Instant::now();
     // ~ 16.742ms
     let frame_duration = Duration::from_secs_f64(1.0 / 59.73);
 
-    while window.is_open() && !window.is_key_down(Key::Escape) {
-        // Limit systems to 70221 t-cycles per frame
+    while tile_map_window.is_open() && !tile_map_window.is_key_down(Key::Escape) {
+        // Limit systems to 70224 t-cycles per frame
         let mut cycles_elapsed = 0;
-        while cycles_elapsed < 70221 {
+        while cycles_elapsed < 70224 {
             let steps = system
                 .step_cpu()
                 .unwrap_or_else(|e| panic!("Failed to step CPU: {e}"));
@@ -45,8 +54,11 @@ fn main() {
         }
 
         // Update window buffer from PPU
-        system.render_tile_banks(&mut window.buffer);
-        window.update();
+        system.render_tile_maps(&mut tile_map_window.buffer);
+        tile_map_window.update();
+
+        // system.render_tile_banks(&mut tiles_window.buffer);
+        // tiles_window.update();
         // Check input
 
         // Limit frame rate to 59.73Hz

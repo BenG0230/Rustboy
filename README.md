@@ -6,9 +6,6 @@ currently only emulates the CPU printing serial output to stdout.
 
 ### Usage
 ```
-# Build the emulator
-cargo build
-
-# Run a test ROM
-cargo run -- <path-to-rom>
+# Run a ROM
+cargo run <path-to-rom>
 ```

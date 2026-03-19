@@ -71,7 +71,7 @@ impl Cpu {
 
     fn trace_print(&self, bus: &mut Bus) {
         println!(
-            "A:{:02X} F:{:02X} B:{:02X} C:{:02X} D:{:02X} E:{:02X} H:{:02X} L:{:02X} SP:{:04X} PC:{:04X} PCMEM:{:02X},{:02X},{:02X},{:02X}",
+            "A:{:02X} F:{:02X} B:{:02X} C:{:02X} D:{:02X} E:{:02X} H:{:02X} L:{:02X} SP:{:04X} PC:{:04X} PCMEM:{:02X},{:02X},{:02X},{:02X} LCDC:{:02X} STAT:{:02X} LY:{:02X}",
             self.a,
             self.f,
             self.b,
@@ -85,7 +85,10 @@ impl Cpu {
             bus.read_byte(self.pc).unwrap(),
             bus.read_byte(self.pc + 1).unwrap(),
             bus.read_byte(self.pc + 2).unwrap(),
-            bus.read_byte(self.pc + 3).unwrap()
+            bus.read_byte(self.pc + 3).unwrap(),
+            bus.read_byte(0xFF40).unwrap(),
+            bus.read_byte(0xFF41).unwrap(),
+            bus.read_byte(0xFF44).unwrap(),
         );
     }
 }

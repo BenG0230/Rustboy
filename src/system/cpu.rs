@@ -293,8 +293,6 @@ impl Cpu {
             }
         }
 
-        bus.write_byte(0xFF44, bus.read_byte(0xFF44)?.wrapping_add(101))?;
-
         if !(self.stopped) {
             if !(self.halted) {
                 return self.decode(bus);

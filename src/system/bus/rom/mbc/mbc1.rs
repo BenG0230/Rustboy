@@ -50,10 +50,11 @@ impl super::MbcTrait for Mbc1 {
 
                 let banked_addr = bank_number * 0x4000 + (addr as usize);
 
-                self.rom
-                    .get(banked_addr)
-                    .copied()
-                    .ok_or(RomError::OutOfBounds(addr))
+                if banked_addr < self.rom.len() {
+                    Ok(self.rom[banked_addr])
+                } else {
+                    Ok(0xFF)
+                }
             }
             0x4000..=0x7FFF => {
                 let max_bank = self.rom.len() / 0x4000;
@@ -62,10 +63,11 @@ impl super::MbcTrait for Mbc1 {
 
                 let banked_addr = bank_number * 0x4000 + (addr as usize - 0x4000);
 
-                self.rom
-                    .get(banked_addr)
-                    .copied()
-                    .ok_or(RomError::OutOfBounds(addr))
+                if banked_addr < self.rom.len() {
+                    Ok(self.rom[banked_addr])
+                } else {
+                    Ok(0xFF)
+                }
             }
             0xA000..=0xBFFF => {
                 if self.ram_enable {
@@ -79,10 +81,11 @@ impl super::MbcTrait for Mbc1 {
 
                     let banked_addr = bank_number * 0x2000 + (addr as usize - 0xA000);
 
-                    self.ram
-                        .get(banked_addr)
-                        .copied()
-                        .ok_or(RomError::OutOfBounds(addr))
+                    if banked_addr < self.ram.len() {
+                        Ok(self.ram[banked_addr])
+                    } else {
+                        Ok(0xFF)
+                    }
                 } else {
                     Ok(0xFF)
                 }
@@ -134,10 +137,10 @@ impl super::MbcTrait for Mbc1 {
 
                     let banked_addr = bank_number * 0x2000 + (addr as usize - 0xA000);
 
-                    if banked_addr >= self.ram.len() {
-                        Err(RomError::OutOfBounds(addr))
-                    } else {
+                    if banked_addr < self.ram.len() {
                         self.ram[banked_addr] = val;
+                        Ok(())
+                    } else {
                         Ok(())
                     }
                 } else {

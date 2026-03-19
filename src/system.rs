@@ -1,18 +1,15 @@
 mod bus;
 mod cpu;
-mod ppu;
 
 use std::error::Error;
 use std::time::Duration;
 
 use bus::{Bus, BusError};
 use cpu::{Cpu, CpuError};
-use ppu::Ppu;
 
 pub struct System {
     cpu: Cpu,
     bus: Bus,
-    pub ppu: Ppu,
 }
 
 impl System {
@@ -23,12 +20,15 @@ impl System {
         Ok(Self {
             cpu: Cpu::new(),
             bus,
-            ppu: Ppu::new(),
         })
     }
 
     pub fn render_tile_banks(&mut self, buffer: &mut Vec<u32>) {
-        self.ppu.render_tile_banks(&mut self.bus, buffer);
+        self.bus.render_tile_banks(buffer);
+    }
+
+    pub fn render_tile_maps(&mut self, buffer: &mut Vec<u32>) {
+        self.bus.render_tile_maps(buffer);
     }
 
     // Run next instruction
@@ -42,11 +42,18 @@ impl System {
         for _ in 0..steps {
             // Tick timers for each
             self.bus.tick_timers();
+
             if self.bus.check_timer_interrupt() {
                 // Set request bit for Timer interrupt HIGH
                 let interrupt_flag = self.bus.read_byte(0xFF0F)?;
 
-                self.bus.write_byte(0xFF0F, interrupt_flag | 0b00000100)?;
+                self.bus.write_byte(0xFF0F, interrupt_flag | 0b100)?;
+            }
+
+            self.bus.step_ppu();
+            if self.bus.check_ppu_interrupt() {
+                let interrupt_flag = self.bus.read_byte(0xFF0F)?;
+                self.bus.write_byte(0xFF0F, interrupt_flag | 0b1)?;
             }
         }
 
