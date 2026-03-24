@@ -27,6 +27,10 @@ impl Io {
 
     pub(super) fn write_reg(&mut self, addr: u16, val: u8) -> Result<(), BusError> {
         match addr {
+            0xFF00 => {
+                self.io_regs[0] = (val & 0xF0) | (self.io_regs[0] & 0x0F);
+                Ok(())
+            }
             0xFF02 => {
                 // Serial transfer control
                 self.io_regs[(addr - 0xFF00) as usize] = val;

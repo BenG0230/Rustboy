@@ -47,8 +47,6 @@ impl Cpu {
 
         let mut opcode = self.fetch(bus)?;
 
-        // self.trace_print(bus);
-
         let instruction = if opcode == 0xCB {
             // Take from prefix table instead
             self.pc = self.pc.wrapping_add(1);
@@ -69,9 +67,9 @@ impl Cpu {
         Ok(instruction.cycles + extra_cycles)
     }
 
-    fn trace_print(&self, bus: &mut Bus) {
+    fn trace_print(&self, bus: &mut Bus, instruction: Instruction) {
         println!(
-            "A:{:02X} F:{:02X} B:{:02X} C:{:02X} D:{:02X} E:{:02X} H:{:02X} L:{:02X} SP:{:04X} PC:{:04X} PCMEM:{:02X},{:02X},{:02X},{:02X} LCDC:{:02X} STAT:{:02X} LY:{:02X}",
+            "AF:{:02X}{:02X} BC:{:02X}{:02X} DE:{:02X}{:02X} HL:{:02X}{:02X} SP:{:04X} PC:{:04X} -> {}",
             self.a,
             self.f,
             self.b,
@@ -82,13 +80,7 @@ impl Cpu {
             self.l,
             self.sp,
             self.pc,
-            bus.read_byte(self.pc).unwrap(),
-            bus.read_byte(self.pc + 1).unwrap(),
-            bus.read_byte(self.pc + 2).unwrap(),
-            bus.read_byte(self.pc + 3).unwrap(),
-            bus.read_byte(0xFF40).unwrap(),
-            bus.read_byte(0xFF41).unwrap(),
-            bus.read_byte(0xFF44).unwrap(),
+            instruction.mneumonic,
         );
     }
 }

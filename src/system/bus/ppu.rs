@@ -149,8 +149,8 @@ impl Ppu {
         let mut bytes: [u8; 16] = [0; 16];
         let mut tile: [u8; 64] = [0; 64];
 
-        for i in 0..16 {
-            bytes[i as usize] = self.vram[((index * 16) + i) as usize];
+        for i in 0..16usize {
+            bytes[i as usize] = self.vram[(index as usize * 16) + i];
         }
 
         for line in (0..16).step_by(2) {
@@ -186,7 +186,13 @@ impl Ppu {
     pub fn render_tile_maps(&mut self, buffer: &mut Vec<u32>) {
         for y in 0..64usize {
             for x in 0..32usize {
-                let tile_index = self.vram[0x1800 + (0x20 * y) + x] as u16;
+                let mut tile_index = self.vram[0x1800 + (0x20 * y) + x] as u16;
+
+                if self.lcdc & 0b10000 == 0 {
+                    if tile_index < 0x80 {
+                        tile_index += 0x100;
+                    }
+                }
 
                 let tile = self.get_tile(tile_index);
 

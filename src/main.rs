@@ -54,20 +54,21 @@ fn main() {
         }
 
         // Update window buffer from PPU
+        // system.render_tile_banks(&mut tiles_window.buffer);
+        // tiles_window.update();
+
         system.render_tile_maps(&mut tile_map_window.buffer);
         tile_map_window.update();
 
-        // system.render_tile_banks(&mut tiles_window.buffer);
-        // tiles_window.update();
         // Check input
 
         // Limit frame rate to 59.73Hz
         let elapsed = last_frame.elapsed();
-        // println!("{:?}", elapsed);
         if elapsed < frame_duration {
             std::thread::sleep(frame_duration - elapsed);
         }
         // println!("{:?}", last_frame.elapsed());
         last_frame = Instant::now();
+        // std::thread::sleep(Duration::from_micros(1000));
     }
 }
