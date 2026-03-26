@@ -31,6 +31,10 @@ impl System {
         self.bus.render_tile_maps(buffer);
     }
 
+    pub fn get_frame_buffer(&mut self) -> &mut Vec<u32> {
+        self.bus.get_frame_buffer()
+    }
+
     // Run next instruction
     // Returns number of t-cycles taken
     pub fn step_cpu(&mut self) -> Result<u8, CpuError> {
@@ -51,7 +55,7 @@ impl System {
             }
 
             self.bus.step_ppu();
-            if self.bus.check_ppu_interrupt() {
+            if self.bus.check_vblank_interrupt() {
                 let interrupt_flag = self.bus.read_byte(0xFF0F)?;
                 self.bus.write_byte(0xFF0F, interrupt_flag | 0b1)?;
             }

@@ -6,14 +6,12 @@ use std::{error::Error, fmt, fs};
 #[derive(Debug)]
 pub enum RomError {
     OutOfBounds(u16),
-    NoROM,
 }
 
 impl fmt::Display for RomError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             RomError::OutOfBounds(addr) => write!(f, "rom -> Address {:#04X} out of bounds", addr),
-            RomError::NoROM => write!(f, "No ROM loaded"),
         }
     }
 }
@@ -26,7 +24,7 @@ impl Rom {
     pub fn new(file_name: &str) -> Result<Self, Box<dyn Error>> {
         let data: Vec<u8> = fs::read(file_name)?;
 
-        // read_header(&data);
+        read_header(&data);
 
         Ok(Self {
             mbc: Mbc::new(data),

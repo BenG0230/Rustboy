@@ -1,156 +1,145 @@
-use super::{Bus, BusError};
+mod ppumemory;
+
+use super::BusError;
+use ppumemory::PpuMemory;
 
 pub struct Ppu {
+    // --- Display stuff ---
+    buffer: Vec<u32>,
     palette: [u32; 4],
-    timer: u32,
 
     // VRAM
-    vram: [u8; 8192],
-
-    // registers
-    lcdc: u8, // 0xFF40
-    stat: u8, // 0xFF41
-    scy: u8,  // 0xFF42
-    scx: u8,  // 0xFF43
-    ly: u8,   // 0xFF44
-    lyc: u8,  // 0xFF45
-    wy: u8,   // 0xFF4A
-    wx: u8,   // 0xFF4B
+    memory: PpuMemory,
 
     // Emulator stuffs
-    current_mode: u8,
+    timer: u32,
 
     // flags
-    requesting_interrupt: bool,
+    req_vblank_interrupt: bool,
 }
 
 impl Ppu {
     pub fn new() -> Self {
         Self {
-            // #9a9e3f
-            // #496b22
-            // #0e450b
-            // #1b2a09
+            // --- Display stuff ---
+            buffer: vec![0; 160 * 144],
             palette: [0x9a9e3f, 0x496b22, 0x0e450b, 0x1b2a09],
+
+            // --- Vram ---
+            memory: PpuMemory::new(),
+
+            // --- Emulation stuff ---
             timer: 0,
-            vram: [0; 8192],
-            lcdc: 0x91,
-            stat: 0x85,
-            scy: 0,
-            scx: 0,
-            ly: 0,
-            lyc: 0,
-            wy: 0,
-            wx: 0,
-            current_mode: 2,
-            requesting_interrupt: false,
+
+            // --- Flags ---
+            req_vblank_interrupt: false,
         }
     }
 
     pub fn read_byte(&self, addr: u16) -> Result<u8, BusError> {
-        match addr {
-            0x8000..=0x9FFF => Ok(self.vram[(addr - 0x8000) as usize]),
-            0xFF40 => Ok(self.lcdc),
-            0xFF41 => Ok(self.stat),
-            0xFF42 => Ok(self.scy),
-            0xFF43 => Ok(self.scx),
-            0xFF44 => Ok(self.ly),
-            0xFF45 => Ok(self.lyc),
-            0xFF4a => Ok(self.wy),
-            0xFF4b => Ok(self.wx),
-            _ => Ok(0xFF),
-        }
+        self.memory.read_byte(addr)
     }
 
     pub fn write_byte(&mut self, addr: u16, val: u8) -> Result<(), BusError> {
-        match addr {
-            0x8000..=0x9FFF => self.vram[(addr - 0x8000) as usize] = val,
-            0xFF40 => {
-                self.lcdc = val;
-                if val & 0x80 == 0 {
-                    self.ly = 0;
-                    self.current_mode = 0;
-                    self.stat = (self.stat & 0b11111100) | self.current_mode;
-                }
-            }
-            0xFF41 => self.stat = (val & 0b11111000) | 0b10000000,
-            0xFF42 => self.scy = val,
-            0xFF43 => self.scx = val,
-            0xFF44 => self.ly = 0,
-            0xFF45 => self.lyc = val,
-            0xFF4a => self.wy = val,
-            0xFF4b => self.wx = val,
-            _ => return Ok(()),
-        }
-        Ok(())
+        self.memory.write_byte(addr, val)
     }
 
     pub fn step(&mut self) {
-        if self.lcdc & 0x80 == 0 {
+        // stop if ppu is disabled
+        if self.memory.lcdc & 0x80 == 0 {
             return;
         }
-        match self.current_mode {
-            2 => {
-                // scan oem
-                // 80 t-cycles
-                if self.timer >= 80 {
-                    self.current_mode = 3;
-                    self.stat = (self.stat & 0b11111100) | self.current_mode;
-                    self.timer = 0;
-                }
-            }
-            3 => {
-                // write pixels
-                // 172-289 t-cycles
-                if self.timer >= 172 {
-                    self.current_mode = 0;
-                    self.stat = (self.stat & 0b11111100) | self.current_mode;
-                    self.timer = 0;
-                }
-            }
-            0 => {
-                // wait for next scan line
-                // 87 - 204 t-cycles
-                if self.timer >= 204 {
-                    self.ly += 1;
 
-                    self.current_mode = if self.ly >= 144 {
-                        self.requesting_interrupt = true;
-                        1
-                    } else {
-                        2
-                    };
-                    self.stat = (self.stat & 0b11111100) | self.current_mode;
-
-                    self.timer = 0;
-                }
-            }
-            1 => {
-                // wait for next frame
-                // 4560 t-cycles
-                if self.timer >= 456 {
-                    self.ly += 1;
-                    if self.ly >= 154 {
-                        self.ly = 0;
-                        self.current_mode = 2;
-                        self.stat = (self.stat & 0b11111100) | self.current_mode;
-                    }
-                    self.timer = 0;
-                }
-            }
-            _ => unreachable!(),
+        // Draw line if moving from mode 2 -> 3
+        // timer = 80
+        if self.timer == 80 && self.memory.ly < 144 {
+            self.draw_scan_line();
         }
-        self.timer += 1;
 
-        self.stat = (self.stat & 0b11111011) | ((self.ly == self.lyc) as u8) << 2;
+        // Check for STAT interrupt
+
+        self.timer += 1;
+        if self.timer >= 456 {
+            self.timer = 0;
+            self.memory.ly += 1;
+
+            if self.memory.ly == 144 {
+                self.req_vblank_interrupt = true;
+            }
+
+            if self.memory.ly == 154 {
+                self.memory.ly = 0;
+            }
+        }
     }
+
+    fn draw_scan_line(&mut self) {
+        let line = self.memory.ly as usize;
+
+        // render background
+        for dx in 0..160 {
+            // Pixel positions in background
+            let x = (self.memory.scx as usize + dx) % 256;
+            let y = (self.memory.scy as usize + line) % 256;
+
+            // Tile positions in background
+            let tile_x = x / 8;
+            let tile_y = y / 8;
+
+            // Tile pixel position
+            let pixel_x = x % 8;
+            let pixel_y = y % 8;
+
+            let map_bank_offset = if self.memory.lcdc & 0b00001000 > 0 {
+                0x1C00
+            } else {
+                0x1800
+            };
+            let mut tile_index =
+                self.memory.vram[map_bank_offset + tile_x + (0x20 * tile_y)] as usize;
+            if self.memory.lcdc & 0b10000 == 0 {
+                if tile_index < 0x80 {
+                    tile_index += 0x100;
+                }
+            }
+
+            let tile_addr = (tile_index * 16) + (2 * pixel_y);
+
+            let bit1 = (self.memory.vram[tile_addr] & (1 << (7 - pixel_x))) >> (7 - pixel_x);
+            let bit2 = (self.memory.vram[tile_addr + 1] & (1 << (7 - pixel_x))) >> (7 - pixel_x);
+            let palette_index = bit2 << 1 | bit1;
+
+            let colour_index = self.memory.bgp[palette_index as usize];
+            let colour = self.palette[colour_index as usize];
+
+            self.buffer[dx + line * 160] = colour;
+        }
+
+        // render window
+        // render sprites (maybe)
+    }
+
+    pub(super) fn get_frame_buffer(&mut self) -> &mut Vec<u32> {
+        return &mut self.buffer;
+    }
+
+    pub(super) fn check_for_vblankinterrupt(&mut self) -> bool {
+        if self.req_vblank_interrupt {
+            self.req_vblank_interrupt = false;
+            true
+        } else {
+            false
+        }
+    }
+
+    // ### Debug Rendering ###
 
     pub fn get_tile(&mut self, index: u16) -> [u8; 64] {
         let mut bytes: [u8; 16] = [0; 16];
         let mut tile: [u8; 64] = [0; 64];
 
         for i in 0..16usize {
-            bytes[i as usize] = self.vram[(index as usize * 16) + i];
+            bytes[i as usize] = self.memory.vram[(index as usize * 16) + i];
         }
 
         for line in (0..16).step_by(2) {
@@ -175,8 +164,10 @@ impl Ppu {
                 for py in 0..8usize {
                     for px in 0..8 {
                         let pixel_index = px + py * 8;
-                        buffer[(x * 8 + y * (8 * 128)) + (px + py * 128)] =
-                            self.palette[tile[pixel_index as usize] as usize];
+                        let colour_indice = self.memory.bgp[tile[pixel_index] as usize];
+                        let colour = self.palette[colour_indice as usize];
+
+                        buffer[(x * 8 + y * (8 * 128)) + (px + py * 128)] = colour;
                     }
                 }
             }
@@ -186,9 +177,9 @@ impl Ppu {
     pub fn render_tile_maps(&mut self, buffer: &mut Vec<u32>) {
         for y in 0..64usize {
             for x in 0..32usize {
-                let mut tile_index = self.vram[0x1800 + (0x20 * y) + x] as u16;
+                let mut tile_index = self.memory.vram[0x1800 + (0x20 * y) + x] as u16;
 
-                if self.lcdc & 0b10000 == 0 {
+                if self.memory.lcdc & 0b10000 == 0 {
                     if tile_index < 0x80 {
                         tile_index += 0x100;
                     }
@@ -199,21 +190,13 @@ impl Ppu {
                 for py in 0..8usize {
                     for px in 0..8usize {
                         let pixel_index = px + py * 8;
+                        let colour_indice = self.memory.bgp[tile[pixel_index] as usize];
+                        let colour = self.palette[colour_indice as usize];
 
-                        buffer[(x * 8 + y * (8 * 256)) + (px + py * 256)] =
-                            self.palette[tile[pixel_index] as usize];
+                        buffer[(x * 8 + y * (8 * 256)) + (px + py * 256)] = colour;
                     }
                 }
             }
-        }
-    }
-
-    pub(super) fn check_for_interrupt(&mut self) -> bool {
-        if self.requesting_interrupt {
-            self.requesting_interrupt = false;
-            true
-        } else {
-            false
         }
     }
 }

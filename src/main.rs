@@ -26,18 +26,18 @@ fn main() {
     }
 
     let rom_fname = &args[1];
-
     let mut system = System::new(rom_fname).unwrap_or_else(|e| panic!("{e}"));
 
-    // let mut main_window = Window::new(MAIN_WIDTH, MAIN_HEIGHT, 4);
-    // let mut tiles_window = Window::new(TILES_WIDTH, TILES_HEIGHT, 4);
+    let mut main_window = Window::new(MAIN_WIDTH, MAIN_HEIGHT, 4);
+    let mut tiles_window = Window::new(TILES_WIDTH, TILES_HEIGHT, 4);
+    let mut temp_tile_buffer = vec![0; TILES_WIDTH * TILES_HEIGHT];
     let mut tile_map_window = Window::new(TILE_MAP_WIDTH, TILE_MAP_HEIGHT, 2);
+    let mut temp_map_buffer = vec![0; TILE_MAP_WIDTH * TILE_MAP_HEIGHT];
 
     let mut last_frame = Instant::now();
-    // ~ 16.742ms
-    let frame_duration = Duration::from_secs_f64(1.0 / 59.73);
+    let frame_duration = Duration::from_secs_f64(1.0 / 59.73); // ~ 16.742ms
 
-    while tile_map_window.is_open() && !tile_map_window.is_key_down(Key::Escape) {
+    while main_window.is_open() && !main_window.is_key_down(Key::Escape) {
         // Limit systems to 70224 t-cycles per frame
         let mut cycles_elapsed = 0;
         while cycles_elapsed < 70224 {
@@ -53,21 +53,21 @@ fn main() {
             cycles_elapsed += steps as u32;
         }
 
-        // Update window buffer from PPU
-        // system.render_tile_banks(&mut tiles_window.buffer);
-        // tiles_window.update();
+        // Update window
+        main_window.update(system.get_frame_buffer());
 
-        system.render_tile_maps(&mut tile_map_window.buffer);
-        tile_map_window.update();
+        system.render_tile_banks(&mut temp_tile_buffer);
+        tiles_window.update(&mut temp_tile_buffer);
 
-        // Check input
+        system.render_tile_maps(&mut temp_map_buffer);
+        tile_map_window.update(&mut temp_map_buffer);
 
         // Limit frame rate to 59.73Hz
         let elapsed = last_frame.elapsed();
+        // println!("{:?}", elapsed);
         if elapsed < frame_duration {
             std::thread::sleep(frame_duration - elapsed);
         }
-        // println!("{:?}", last_frame.elapsed());
         last_frame = Instant::now();
         // std::thread::sleep(Duration::from_micros(1000));
     }

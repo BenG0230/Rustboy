@@ -103,7 +103,6 @@ impl super::MbcTrait for Mbc1 {
                 } else {
                     self.ram_enable = false;
                 }
-                Ok(())
             }
             0x2000..=0x3FFF => {
                 self.reg1 = val & 0b11111;
@@ -111,19 +110,11 @@ impl super::MbcTrait for Mbc1 {
                 if self.reg1 == 0 {
                     self.reg1 = 1;
                 }
-
-                Ok(())
             }
-            0x4000..=0x5FFF => {
-                self.reg2 = val & 0b11;
-
-                Ok(())
-            }
+            0x4000..=0x5FFF => self.reg2 = val & 0b11,
             0x6000..=0x7FFF => {
                 // Banking mode 1 or 0 based on bit 0
                 self.banking_mode = val & 1;
-
-                Ok(())
             }
             0xA000..=0xBFFF => {
                 if self.ram_enable {
@@ -139,15 +130,12 @@ impl super::MbcTrait for Mbc1 {
 
                     if banked_addr < self.ram.len() {
                         self.ram[banked_addr] = val;
-                        Ok(())
-                    } else {
-                        Ok(())
                     }
-                } else {
-                    Ok(())
                 }
             }
-            _ => Err(RomError::OutOfBounds(addr)),
+            _ => return Err(RomError::OutOfBounds(addr)),
         }
+
+        Ok(())
     }
 }

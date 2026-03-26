@@ -2,9 +2,8 @@ use minifb::{Key, Window as minifbWindow, WindowOptions};
 
 pub struct Window {
     window: minifbWindow,
-    pub buffer: Vec<u32>,
-    pub width: usize,
-    pub height: usize,
+    width: usize,
+    height: usize,
 }
 
 impl Window {
@@ -32,15 +31,14 @@ impl Window {
                 },
             )
             .unwrap_or_else(|e| panic!("{e}")),
-            buffer: vec![0; width * height],
             width,
             height,
         }
     }
 
-    pub fn update(&mut self) {
+    pub fn update(&mut self, buffer: &mut Vec<u32>) {
         self.window
-            .update_with_buffer(&self.buffer, self.width, self.height)
+            .update_with_buffer(buffer, self.width, self.height)
             .unwrap();
     }
 
