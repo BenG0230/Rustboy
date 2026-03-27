@@ -15,6 +15,7 @@ pub struct Ppu {
     timer: u32,
 
     // flags
+    req_stat_interrupt: bool,
     req_vblank_interrupt: bool,
 }
 
@@ -32,6 +33,7 @@ impl Ppu {
             timer: 0,
 
             // --- Flags ---
+            req_stat_interrupt: false,
             req_vblank_interrupt: false,
         }
     }
@@ -50,15 +52,39 @@ impl Ppu {
             return;
         }
 
-        // Draw line if moving from mode 2 -> 3
-        // timer = 80
-        if self.timer == 80 && self.memory.ly < 144 {
-            self.draw_scan_line();
-        }
+        self.timer += 1;
+
+        let mode = if self.memory.ly < 144 {
+            match self.timer {
+                0 => {
+                    if self.memory.stat & 0b00100000 > 0 {
+                        self.req_stat_interrupt = true;
+                    }
+                    2
+                }
+                80 => {
+                    self.draw_scan_line();
+                    3
+                }
+                252 => {
+                    if self.memory.stat & 0b00001000 > 0 {
+                        self.req_stat_interrupt = true;
+                    }
+                    0
+                }
+                _ => self.memory.stat & 0b11,
+            }
+        } else {
+            if self.memory.stat & 0b11 != 1 && self.memory.stat & 0b00010000 > 0 {
+                self.req_stat_interrupt = true;
+            }
+            1
+        };
+
+        self.memory.stat = (self.memory.stat & 0b11111100) | mode;
 
         // Check for STAT interrupt
 
-        self.timer += 1;
         if self.timer >= 456 {
             self.timer = 0;
             self.memory.ly += 1;
@@ -69,6 +95,16 @@ impl Ppu {
 
             if self.memory.ly == 154 {
                 self.memory.ly = 0;
+            }
+
+            if self.memory.ly == self.memory.lyc {
+                if self.memory.stat & 0b100 == 0 && self.memory.stat & 0b01000000 > 0 {
+                    self.req_stat_interrupt = true;
+                }
+
+                self.memory.stat = self.memory.stat | 0b100;
+            } else {
+                self.memory.stat = self.memory.stat & 0b11111011;
             }
         }
     }
@@ -116,11 +152,63 @@ impl Ppu {
         }
 
         // render window
+
+        if self.memory.lcdc & 0b00100000 > 1 && self.memory.wx < 166 && self.memory.wy <= line as u8
+        {
+            for dx in 0..160usize {
+                if dx < self.memory.wx.wrapping_sub(7) as usize {
+                    continue;
+                }
+
+                let x = dx - self.memory.wx.wrapping_sub(7) as usize;
+                let y = line - self.memory.wy as usize;
+
+                let tile_x = x / 8;
+                let tile_y = y / 8;
+
+                let pixel_x = x % 8;
+                let pixel_y = y % 8;
+
+                let map_bank_offset = if self.memory.lcdc & 0b01000000 > 0 {
+                    0x1C00
+                } else {
+                    0x1800
+                };
+                let mut tile_index =
+                    self.memory.vram[map_bank_offset + tile_x + (0x20 * tile_y)] as usize;
+                if self.memory.lcdc & 0b10000 == 0 {
+                    if tile_index < 0x80 {
+                        tile_index += 0x100;
+                    }
+                }
+
+                let tile_addr = (tile_index * 16) + (2 * pixel_y);
+
+                let bit1 = (self.memory.vram[tile_addr] & (1 << (7 - pixel_x))) >> (7 - pixel_x);
+                let bit2 =
+                    (self.memory.vram[tile_addr + 1] & (1 << (7 - pixel_x))) >> (7 - pixel_x);
+                let palette_index = bit2 << 1 | bit1;
+
+                let colour_index = self.memory.bgp[palette_index as usize];
+                let colour = self.palette[colour_index as usize];
+
+                self.buffer[dx + line * 160] = colour;
+            }
+        }
         // render sprites (maybe)
     }
 
     pub(super) fn get_frame_buffer(&mut self) -> &mut Vec<u32> {
         return &mut self.buffer;
+    }
+
+    pub(super) fn check_for_statinterrupt(&mut self) -> bool {
+        if self.req_stat_interrupt {
+            self.req_stat_interrupt = false;
+            true
+        } else {
+            false
+        }
     }
 
     pub(super) fn check_for_vblankinterrupt(&mut self) -> bool {

@@ -56,7 +56,7 @@ impl Cpu {
             INSTRUCTION_TABLE[opcode as usize]
         };
 
-        self.trace_print(bus, instruction);
+        // self.trace_print(bus, instruction);
 
         let extra_cycles = instruction.execute(self, bus, opcode)?;
         self.pc = self.pc.wrapping_add(instruction.bytes);
@@ -71,7 +71,7 @@ impl Cpu {
 
     fn trace_print(&self, bus: &mut Bus, instruction: Instruction) {
         println!(
-            "AF:{:02X}{:02X} BC:{:02X}{:02X} DE:{:02X}{:02X} HL:{:02X}{:02X} SP:{:04X} PC:{:04X} -> {} SCX:{:02X} SCY{:02X}",
+            "AF:{:02X}{:02X} BC:{:02X}{:02X} DE:{:02X}{:02X} HL:{:02X}{:02X} SP:{:04X} PC:{:04X} -> {} PCMEM:{:02X},{:02X},{:02X},{:02X} LY:{:02X} LYC:{:02X}",
             self.a,
             self.f,
             self.b,
@@ -83,8 +83,12 @@ impl Cpu {
             self.sp,
             self.pc,
             instruction.mneumonic,
-            bus.read_byte(0xFF43).unwrap(),
-            bus.read_byte(0xFF42).unwrap(),
+            bus.read_byte(self.pc).unwrap(),
+            bus.read_byte(self.pc + 1).unwrap(),
+            bus.read_byte(self.pc + 2).unwrap(),
+            bus.read_byte(self.pc + 3).unwrap(),
+            bus.read_byte(0xFF44).unwrap(),
+            bus.read_byte(0xFF45).unwrap(),
         );
     }
 }

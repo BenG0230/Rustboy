@@ -119,6 +119,10 @@ impl Bus {
         self.ppu.get_frame_buffer()
     }
 
+    pub fn check_stat_interrupt(&mut self) -> bool {
+        self.ppu.check_for_statinterrupt()
+    }
+
     pub fn check_vblank_interrupt(&mut self) -> bool {
         self.ppu.check_for_vblankinterrupt()
     }
