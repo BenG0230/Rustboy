@@ -31,8 +31,8 @@ fn main() {
     let mut main_window = Window::new(MAIN_WIDTH, MAIN_HEIGHT, 4);
     main_window.set_target_fps(60);
 
-    let mut tile_map_window = Window::new(TILE_MAP_WIDTH, TILE_MAP_HEIGHT, 2);
-    let mut temp_map_buffer = vec![0xFF00FF; TILE_MAP_WIDTH * TILE_MAP_HEIGHT];
+    // let mut tile_map_window = Window::new(TILE_MAP_WIDTH, TILE_MAP_HEIGHT, 2);
+    // let mut temp_map_buffer = vec![0xFF00FF; TILE_MAP_WIDTH * TILE_MAP_HEIGHT];
 
     // let mut tiles_window = Window::new(TILES_WIDTH, TILES_HEIGHT, 4);
     // let mut temp_tile_buffer = vec![0; TILES_WIDTH * TILES_HEIGHT];
@@ -61,8 +61,8 @@ fn main() {
             let elapsed = last_frame.elapsed();
             main_window.update(system.get_frame_buffer());
 
-            system.render_tile_maps(&mut temp_map_buffer);
-            tile_map_window.update(&mut temp_map_buffer);
+            // system.render_tile_maps(&mut temp_map_buffer);
+            // tile_map_window.update(&mut temp_map_buffer);
 
             // system.render_tile_banks(&mut temp_tile_buffer);
             // tiles_window.update(&mut temp_tile_buffer);
