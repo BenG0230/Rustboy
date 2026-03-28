@@ -90,6 +90,13 @@ impl Bus {
         match addr {
             0x0000..=0x7FFF | 0xA000..=0xBFFF => self.rom.write_byte(addr, val)?,
             0x8000..=0x9FFF | 0xFE00..=0xFE9F | 0xFF40..=0xFF4B => {
+                if addr == 0xFF46 {
+                    // DMA Transfer
+                    for i in 0..160 {
+                        let source = (val as u16) * 256 + i;
+                        self.write_byte(0xFE00 + i, self.read_byte(source)?)?;
+                    }
+                }
                 self.ppu.write_byte(addr, val)?
             }
             0xC000..=0xDFFF => self.wram[(addr - 0xC000) as usize] = val,
@@ -107,10 +114,6 @@ impl Bus {
         self.io.tick_timers();
     }
 
-    pub fn check_timer_interrupt(&mut self) -> bool {
-        self.io.check_timer_interrupt()
-    }
-
     pub fn step_ppu(&mut self) {
         self.ppu.step();
     }
@@ -119,9 +122,15 @@ impl Bus {
         self.ppu.get_frame_buffer()
     }
 
+    pub fn check_timer_interrupt(&mut self) -> bool {
+        self.io.check_timer_interrupt()
+    }
+
     pub fn check_stat_interrupt(&mut self) -> bool {
         self.ppu.check_for_statinterrupt()
     }
+
+    // Debug rendering
 
     pub fn check_vblank_interrupt(&mut self) -> bool {
         self.ppu.check_for_vblankinterrupt()

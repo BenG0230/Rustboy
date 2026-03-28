@@ -12,7 +12,7 @@ const TILES_WIDTH: usize = 128;
 const TILES_HEIGHT: usize = 192;
 
 const TILE_MAP_WIDTH: usize = 256;
-const TILE_MAP_HEIGHT: usize = 512;
+const TILE_MAP_HEIGHT: usize = 513;
 
 const MAIN_WIDTH: usize = 160;
 const MAIN_HEIGHT: usize = 144;
@@ -29,13 +29,15 @@ fn main() {
     let mut system = System::new(rom_fname).unwrap_or_else(|e| panic!("{e}"));
 
     let mut main_window = Window::new(MAIN_WIDTH, MAIN_HEIGHT, 4);
+    main_window.set_target_fps(60);
+
+    let mut tile_map_window = Window::new(TILE_MAP_WIDTH, TILE_MAP_HEIGHT, 2);
+    let mut temp_map_buffer = vec![0xFF00FF; TILE_MAP_WIDTH * TILE_MAP_HEIGHT];
+
     // let mut tiles_window = Window::new(TILES_WIDTH, TILES_HEIGHT, 4);
     // let mut temp_tile_buffer = vec![0; TILES_WIDTH * TILES_HEIGHT];
-    // let mut tile_map_window = Window::new(TILE_MAP_WIDTH, TILE_MAP_HEIGHT, 2);
-    // let mut temp_map_buffer = vec![0; TILE_MAP_WIDTH * TILE_MAP_HEIGHT];
 
     let mut last_frame = Instant::now();
-    let frame_duration = Duration::from_secs_f64(1.0 / 59.73); // ~ 16.742ms
 
     let mut cycles_elapsed = 0;
     while main_window.is_open() && !main_window.is_key_down(Key::Escape) {
@@ -54,25 +56,27 @@ fn main() {
         // }
 
         // Update window
-
-        if system.temp {
-            main_window.update(system.get_frame_buffer());
-            system.temp = false;
-
+        if system.vblank {
+            // if cycles_elapsed > 7000 {
             let elapsed = last_frame.elapsed();
-            if elapsed < frame_duration {
-                std::thread::sleep(frame_duration - elapsed);
-            }
-            println!("{:?} - {}", last_frame.elapsed(), cycles_elapsed);
-            last_frame = Instant::now();
+            main_window.update(system.get_frame_buffer());
 
+            system.render_tile_maps(&mut temp_map_buffer);
+            tile_map_window.update(&mut temp_map_buffer);
+
+            // system.render_tile_banks(&mut temp_tile_buffer);
+            // tiles_window.update(&mut temp_tile_buffer);
+
+            println!(
+                "{:?} - {:?} - {}",
+                elapsed,
+                last_frame.elapsed(),
+                cycles_elapsed
+            );
+
+            last_frame = Instant::now();
+            system.vblank = false;
             cycles_elapsed = 0;
         }
-
-        // system.render_tile_banks(&mut temp_tile_buffer);
-        // tiles_window.update(&mut temp_tile_buffer);
-        //
-        // system.render_tile_maps(&mut temp_map_buffer);
-        // tile_map_window.update(&mut temp_map_buffer);
     }
 }

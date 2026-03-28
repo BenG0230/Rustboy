@@ -36,6 +36,10 @@ impl Window {
         }
     }
 
+    pub fn set_target_fps(&mut self, fps: usize) {
+        self.window.set_target_fps(fps);
+    }
+
     pub fn update(&mut self, buffer: &mut Vec<u32>) {
         self.window
             .update_with_buffer(buffer, self.width, self.height)

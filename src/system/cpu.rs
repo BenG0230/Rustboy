@@ -62,7 +62,7 @@ pub struct Cpu {
     // --- Control ---
     halted: bool,
     stopped: bool,
-    ime_pending: bool, // Wether to change IME -> True after instruction (see IE)
+    ime_pending: bool, // IME -> True after instruction if true (see IE)
 }
 
 impl Cpu {

@@ -10,7 +10,8 @@ use cpu::{Cpu, CpuError};
 pub struct System {
     cpu: Cpu,
     bus: Bus,
-    pub temp: bool,
+
+    pub vblank: bool,
 }
 
 impl System {
@@ -21,7 +22,7 @@ impl System {
         Ok(Self {
             cpu: Cpu::new(),
             bus,
-            temp: false,
+            vblank: false,
         })
     }
 
@@ -43,7 +44,7 @@ impl System {
         self.cpu.step(&mut self.bus)
     }
 
-    // Tick subSystems by number of t-cycles
+    // Tick sub Systems by number of t-cycles
     pub fn tick_subsystems(&mut self, steps: u8) -> Result<(), BusError> {
         for _ in 0..steps {
             // Tick timers for each
@@ -58,7 +59,7 @@ impl System {
 
             self.bus.step_ppu();
             if self.bus.check_vblank_interrupt() {
-                self.temp = true;
+                self.vblank = true;
                 let interrupt_flag = self.bus.read_byte(0xFF0F)?;
                 self.bus.write_byte(0xFF0F, interrupt_flag | 0b1)?;
             }

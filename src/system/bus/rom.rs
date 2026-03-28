@@ -24,7 +24,7 @@ impl Rom {
     pub fn new(file_name: &str) -> Result<Self, Box<dyn Error>> {
         let data: Vec<u8> = fs::read(file_name)?;
 
-        read_header(&data);
+        // read_header(&data);
 
         Ok(Self {
             mbc: Mbc::new(data),
