@@ -27,18 +27,22 @@ impl Io {
                 let mut reg_val = 0xFF;
 
                 if self.io_regs[0] & 0b00010000 == 0 {
-                    for i in 0..3 {
-                        reg_val &= (!self.joypad[i] as u8) << i;
+                    let mut button_vals = 0xF0;
+                    for i in 0..4 {
+                        button_vals |= (!self.joypad[i] as u8) << i;
                     }
+
+                    reg_val = button_vals;
                 }
 
                 if self.io_regs[0] & 0b00100000 == 0 {
-                    for i in 0..3 {
-                        reg_val &= (!self.joypad[i + 4] as u8) << i;
+                    let mut button_vals = 0xF0;
+                    for i in 0..4 {
+                        button_vals |= (!self.joypad[i + 4] as u8) << i;
                     }
+                    reg_val = button_vals;
                 }
 
-                println!("{:08b}", reg_val);
                 Ok(reg_val)
             }
             0xFF04..=0xFF07 => self.timers.read_reg(addr),
