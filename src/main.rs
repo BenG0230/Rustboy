@@ -17,6 +17,18 @@ const TILE_MAP_HEIGHT: usize = 513;
 const MAIN_WIDTH: usize = 160;
 const MAIN_HEIGHT: usize = 144;
 
+fn check_inputs(system: &mut System, window: &Window) {
+    system.change_key(0, window.is_key_down(Key::Right));
+    system.change_key(1, window.is_key_down(Key::Left));
+    system.change_key(2, window.is_key_down(Key::Up));
+    system.change_key(3, window.is_key_down(Key::Down));
+
+    system.change_key(4, window.is_key_down(Key::Z));
+    system.change_key(5, window.is_key_down(Key::X));
+    system.change_key(6, window.is_key_down(Key::S));
+    system.change_key(7, window.is_key_down(Key::A));
+}
+
 fn main() {
     let args: Vec<_> = env::args().collect();
 
@@ -28,21 +40,20 @@ fn main() {
     let rom_fname = &args[1];
     let mut system = System::new(rom_fname).unwrap_or_else(|e| panic!("{e}"));
 
+    // Main game window
     let mut main_window = Window::new(MAIN_WIDTH, MAIN_HEIGHT, 4);
     main_window.set_target_fps(60);
 
-    // let mut tile_map_window = Window::new(TILE_MAP_WIDTH, TILE_MAP_HEIGHT, 2);
-    // let mut temp_map_buffer = vec![0xFF00FF; TILE_MAP_WIDTH * TILE_MAP_HEIGHT];
-
-    // let mut tiles_window = Window::new(TILES_WIDTH, TILES_HEIGHT, 4);
-    // let mut temp_tile_buffer = vec![0; TILES_WIDTH * TILES_HEIGHT];
+    // Debug window
+    let mut tile_map_window = Window::new(TILE_MAP_WIDTH, TILE_MAP_HEIGHT, 2);
+    let mut temp_map_buffer = vec![0xFF00FF; TILE_MAP_WIDTH * TILE_MAP_HEIGHT];
+    let mut tiles_window = Window::new(TILES_WIDTH, TILES_HEIGHT, 4);
+    let mut temp_tile_buffer = vec![0; TILES_WIDTH * TILES_HEIGHT];
 
     let mut last_frame = Instant::now();
 
     let mut cycles_elapsed = 0;
     while main_window.is_open() && !main_window.is_key_down(Key::Escape) {
-        // Limit systems to 70224 t-cycles per frame
-        // while cycles_elapsed < 70224 {
         let steps = system
             .step_cpu()
             .unwrap_or_else(|e| panic!("Failed to step CPU: {e}"));
@@ -52,21 +63,24 @@ fn main() {
             .tick_subsystems(steps)
             .unwrap_or_else(|e| panic!("Failed to tick subSystems: {e}"));
 
-        cycles_elapsed += steps as u32;
-        // }
+        cycles_elapsed += 1;
 
-        // Update window
+        // Check inputs
+        // check_inputs(&mut system, &main_window);
+
+        // Update window every vblank
         if system.vblank {
-            // if cycles_elapsed > 7000 {
             let elapsed = last_frame.elapsed();
             main_window.update(system.get_frame_buffer());
 
-            // system.render_tile_maps(&mut temp_map_buffer);
-            // tile_map_window.update(&mut temp_map_buffer);
+            // Debug windows
+            system.render_tile_maps(&mut temp_map_buffer);
+            tile_map_window.update(&mut temp_map_buffer);
 
-            // system.render_tile_banks(&mut temp_tile_buffer);
-            // tiles_window.update(&mut temp_tile_buffer);
+            system.render_tile_banks(&mut temp_tile_buffer);
+            tiles_window.update(&mut temp_tile_buffer);
 
+            // Output system frame time + full frame time + cycles elapsed
             println!(
                 "{:?} - {:?} - {}",
                 elapsed,

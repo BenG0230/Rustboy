@@ -130,6 +130,10 @@ impl Bus {
         self.ppu.check_for_statinterrupt()
     }
 
+    pub fn change_key(&mut self, button_index: usize, val: bool) {
+        self.io.change_key(button_index, val);
+    }
+
     // Debug rendering
 
     pub fn check_vblank_interrupt(&mut self) -> bool {

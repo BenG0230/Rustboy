@@ -38,6 +38,10 @@ impl System {
         self.bus.get_frame_buffer()
     }
 
+    pub(super) fn change_key(&mut self, button_index: usize, val: bool) {
+        self.bus.change_key(button_index, val);
+    }
+
     // Run next instruction
     // Returns number of t-cycles taken
     pub fn step_cpu(&mut self) -> Result<u8, CpuError> {
