@@ -194,7 +194,11 @@ impl Ppu {
             let colour = self.palette[colour_index as usize];
 
             // draw to screen
-            self.buffer[dx + line * 160] = colour;
+            if self.memory.lcdc & 1 == 1 {
+                self.buffer[dx + line * 160] = colour;
+            } else {
+                self.buffer[dx + line * 160] = 0xFFFFFF;
+            }
 
             // For every object on this line
             for ob_index in ob_in_line {
@@ -229,13 +233,7 @@ impl Ppu {
                         (ob_height as u8 - 1) - (line as u8 + 16 - ob_y)
                     };
 
-                    let tile_index = if pixel_y <= 7 {
-                        // Use first tile
-                        self.memory.oam[ob_index as usize * 4 + 2]
-                    } else {
-                        // Use next tile
-                        self.memory.oam[ob_index as usize * 4 + 2] + 1
-                    } as usize;
+                    let tile_index = self.memory.oam[ob_index as usize * 4 + 2] as usize;
 
                     let tile_addr = tile_index * 16 + (pixel_y as usize * 2);
 
