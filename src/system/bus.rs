@@ -118,7 +118,7 @@ impl Bus {
         self.ppu.step();
     }
 
-    pub fn get_frame_buffer(&mut self) -> &mut Vec<u32> {
+    pub fn get_frame_buffer(&mut self) -> &mut Vec<u8> {
         self.ppu.get_frame_buffer()
     }
 
@@ -134,17 +134,7 @@ impl Bus {
         self.io.change_key(button_index, val);
     }
 
-    // Debug rendering
-
     pub fn check_vblank_interrupt(&mut self) -> bool {
         self.ppu.check_for_vblankinterrupt()
-    }
-
-    pub fn render_tile_banks(&mut self, buffer: &mut Vec<u32>) {
-        self.ppu.render_tile_banks(buffer);
-    }
-
-    pub fn render_tile_maps(&mut self, buffer: &mut Vec<u32>) {
-        self.ppu.render_tile_maps(buffer);
     }
 }

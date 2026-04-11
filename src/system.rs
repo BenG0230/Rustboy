@@ -1,8 +1,8 @@
 mod bus;
 mod cpu;
 
-use std::error::Error;
 use std::time::Duration;
+use std::{error::Error, iter::Cycle};
 
 use bus::{Bus, BusError};
 use cpu::{Cpu, CpuError};
@@ -26,20 +26,28 @@ impl System {
         })
     }
 
-    pub fn render_tile_banks(&mut self, buffer: &mut Vec<u32>) {
-        self.bus.render_tile_banks(buffer);
-    }
-
-    pub fn render_tile_maps(&mut self, buffer: &mut Vec<u32>) {
-        self.bus.render_tile_maps(buffer);
-    }
-
-    pub fn get_frame_buffer(&mut self) -> &mut Vec<u32> {
-        self.bus.get_frame_buffer()
+    pub fn copy_frame_buffer(&mut self, frame: &mut [u8]) {
+        frame.copy_from_slice(self.bus.get_frame_buffer());
     }
 
     pub(super) fn change_key(&mut self, button_index: usize, val: bool) {
         self.bus.change_key(button_index, val);
+    }
+
+    pub fn run_until_vblank(&mut self) -> u32 {
+        let mut cycles_elapsed = 0;
+        while !self.vblank {
+            let steps = self
+                .step_cpu()
+                .unwrap_or_else(|e| panic!("Failed to step CPU: {e}"));
+
+            self.tick_subsystems(steps)
+                .unwrap_or_else(|e| panic!("Failed to tick subSystems: {e}"));
+            cycles_elapsed += 1;
+        }
+
+        self.vblank = false;
+        cycles_elapsed
     }
 
     // Run next instruction
