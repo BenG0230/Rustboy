@@ -34,22 +34,6 @@ impl System {
         self.bus.change_key(button_index, val);
     }
 
-    pub fn run_until_vblank(&mut self) -> u32 {
-        let mut cycles_elapsed = 0;
-        while !self.vblank {
-            let steps = self
-                .step_cpu()
-                .unwrap_or_else(|e| panic!("Failed to step CPU: {e}"));
-
-            self.tick_subsystems(steps)
-                .unwrap_or_else(|e| panic!("Failed to tick subSystems: {e}"));
-            cycles_elapsed += 1;
-        }
-
-        self.vblank = false;
-        cycles_elapsed
-    }
-
     // Run next instruction
     // Returns number of t-cycles taken
     pub fn step_cpu(&mut self) -> Result<u8, CpuError> {

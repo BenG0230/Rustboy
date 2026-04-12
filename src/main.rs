@@ -2,6 +2,7 @@ mod system;
 
 use std::{
     env,
+    iter::Cycle,
     time::{Duration, Instant},
 };
 
@@ -10,8 +11,9 @@ use system::System;
 use winit::{
     application::ApplicationHandler,
     dpi::LogicalSize,
-    event::WindowEvent,
+    event::{ElementState, WindowEvent},
     event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
+    keyboard::{Key, NamedKey, SmolStr},
     window::{Window, WindowId},
 };
 
@@ -77,14 +79,46 @@ impl ApplicationHandler for App {
                     window.request_redraw();
                 }
             }
+            WindowEvent::KeyboardInput {
+                device_id,
+                event,
+                is_synthetic,
+            } => {
+                if event.repeat {
+                    return;
+                }
+
+                if event.logical_key == Key::Named(NamedKey::Escape) {
+                    event_loop.exit();
+                }
+
+                let key_index = match event.logical_key.as_ref() {
+                    Key::Named(NamedKey::ArrowRight) => 0,
+                    Key::Named(NamedKey::ArrowLeft) => 1,
+                    Key::Named(NamedKey::ArrowUp) => 2,
+                    Key::Named(NamedKey::ArrowDown) => 3,
+                    Key::Character("x") => 4,
+                    Key::Character("z") => 5,
+                    Key::Character("a") => 6,
+                    Key::Character("s") => 7,
+                    _ => {
+                        return;
+                    }
+                };
+                let val = match event.state {
+                    ElementState::Pressed => true,
+                    ElementState::Released => false,
+                };
+                self.system.change_key(key_index, val);
+            }
             _ => {}
         }
     }
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
         let logic_instant = Instant::now();
+        let mut cycles_elapsed = 0;
         for _ in 0..SPEED_UP {
-            let mut cycles_elapsed = 0;
             while !self.system.vblank {
                 let steps = self
                     .system
@@ -110,7 +144,10 @@ impl ApplicationHandler for App {
         }
         let frame_time = self.last_frame.elapsed();
 
-        println!("logic_time: {:?}, frame time: {:?}", logic_time, frame_time);
+        // println!(
+        //     "logic_time: {:?}, frame time: {:?}, cycles_elapsed: {}",
+        //     logic_time, frame_time, cycles_elapsed
+        // );
 
         self.last_frame = Instant::now();
     }
