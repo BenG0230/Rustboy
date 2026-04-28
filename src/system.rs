@@ -34,6 +34,10 @@ impl System {
         self.bus.change_key(button_index, val);
     }
 
+    pub fn mix_apu(&mut self) -> f32 {
+        self.bus.mix_apu()
+    }
+
     // Run next instruction
     // Returns number of t-cycles taken
     pub fn step_cpu(&mut self) -> Result<u8, CpuError> {
@@ -63,6 +67,8 @@ impl System {
                 let interrupt_flag = self.bus.read_byte(0xFF0F)?;
                 self.bus.write_byte(0xFF0F, interrupt_flag | 0b10)?;
             }
+
+            self.bus.step_apu();
         }
 
         Ok(())

@@ -1,7 +1,9 @@
+mod apu;
 mod io;
 mod ppu;
 mod rom;
 
+use apu::Apu;
 use ppu::Ppu;
 use rom::{Rom, RomError};
 use std::{error::Error, fmt};
@@ -32,6 +34,7 @@ impl fmt::Display for BusError {
 pub struct Bus {
     rom: Rom,
     ppu: Ppu,
+    apu: Apu,
     wram: [u8; 8192],
     io: Io,
     hram: [u8; 127],
@@ -43,6 +46,7 @@ impl Bus {
         Ok(Self {
             rom: Rom::new(rom_fname)?, // ROM + RAM
             ppu: Ppu::new(),           // VRAM + OAM + Video I/O Regs
+            apu: Apu::new(),
             wram: [0; 8192],
             io: Io::new(),
             hram: [0; 127],
@@ -65,6 +69,7 @@ impl Bus {
         match addr {
             0x0000..=0x7FFF | 0xA000..=0xBFFF => self.rom.read_byte(addr).map_err(BusError::from),
             0x8000..=0x9FFF | 0xFE00..=0xFE9F | 0xFF40..=0xFF4B => self.ppu.read_byte(addr),
+            0xFF10..=0xFF3F => self.apu.read_byte(addr),
             0xC000..=0xDFFF => Ok(self.wram[(addr - 0xC000) as usize]),
             0xE000..=0xFDFF => Ok(self.wram[(addr - 0xC000 - 0x2000) as usize]),
             0xFEA0..=0xFEFF => Ok(0xFF),
@@ -99,6 +104,7 @@ impl Bus {
                 }
                 self.ppu.write_byte(addr, val)?
             }
+            0xFF10..=0xFF3F => self.apu.write_byte(addr, val)?,
             0xC000..=0xDFFF => self.wram[(addr - 0xC000) as usize] = val,
             0xE000..=0xFDFF => self.wram[(addr - 0xC000 - 0x2000) as usize] = val,
             0xFEA0..=0xFEFF => {}
@@ -118,8 +124,16 @@ impl Bus {
         self.ppu.step();
     }
 
+    pub fn step_apu(&mut self) {
+        self.apu.step();
+    }
+
     pub fn get_frame_buffer(&mut self) -> &mut Vec<u8> {
         self.ppu.get_frame_buffer()
+    }
+
+    pub fn mix_apu(&mut self) -> f32 {
+        self.apu.mix()
     }
 
     pub fn check_timer_interrupt(&mut self) -> bool {

@@ -1,19 +1,21 @@
+mod audio;
 mod system;
 
 use std::{
     env,
-    iter::Cycle,
+    sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
 
 use pixels::{Pixels, SurfaceTexture};
+use rodio::{DeviceSinkBuilder, Source, nz};
 use system::System;
 use winit::{
     application::ApplicationHandler,
     dpi::LogicalSize,
     event::{ElementState, WindowEvent},
     event_loop::{ActiveEventLoop, ControlFlow, EventLoop},
-    keyboard::{Key, NamedKey, SmolStr},
+    keyboard::{Key, NamedKey},
     window::{Window, WindowId},
 };
 
@@ -24,16 +26,63 @@ const SPEED_UP: u32 = 1;
 struct App {
     window: Option<&'static Window>,
     pixels: Option<Pixels<'static>>,
-    system: System,
+    system: Arc<Mutex<System>>,
     last_frame: Instant,
+}
+
+struct ApuSource {
+    system: Arc<Mutex<System>>,
+}
+
+impl Iterator for ApuSource {
+    type Item = f32;
+
+    fn next(&mut self) -> Option<f32> {
+        let mut system = self.system.lock().unwrap();
+
+        Some(system.mix_apu())
+    }
+}
+
+impl Source for ApuSource {
+    fn current_span_len(&self) -> Option<usize> {
+        None
+    }
+
+    fn channels(&self) -> rodio::ChannelCount {
+        nz!(1)
+    }
+
+    fn sample_rate(&self) -> rodio::SampleRate {
+        nz!(44100)
+    }
+
+    fn total_duration(&self) -> Option<Duration> {
+        None
+    }
 }
 
 impl App {
     fn new(rom_fname: &str) -> Self {
+        let system = Arc::new(Mutex::new(
+            System::new(rom_fname).unwrap_or_else(|e| panic!("{e}")),
+        ));
+
+        let stream_handle =
+            DeviceSinkBuilder::open_default_sink().expect("Open default audio stream");
+
+        let audio_source = ApuSource {
+            system: system.clone(),
+        };
+
+        stream_handle.mixer().add(audio_source);
+
+        let _ = Box::leak(Box::new(stream_handle));
+
         Self {
             window: None,
             pixels: None,
-            system: System::new(rom_fname).unwrap_or_else(|e| panic!("{e}")),
+            system,
             last_frame: Instant::now(),
         }
     }
@@ -70,7 +119,7 @@ impl ApplicationHandler for App {
                 if let Some(pixels) = &mut self.pixels {
                     let frame = pixels.frame_mut();
 
-                    self.system.copy_frame_buffer(frame);
+                    self.system.lock().unwrap().copy_frame_buffer(frame);
 
                     pixels.render().unwrap();
                 }
@@ -79,11 +128,7 @@ impl ApplicationHandler for App {
                     window.request_redraw();
                 }
             }
-            WindowEvent::KeyboardInput {
-                device_id,
-                event,
-                is_synthetic,
-            } => {
+            WindowEvent::KeyboardInput { event, .. } => {
                 if event.repeat {
                     return;
                 }
@@ -109,29 +154,29 @@ impl ApplicationHandler for App {
                     ElementState::Pressed => true,
                     ElementState::Released => false,
                 };
-                self.system.change_key(key_index, val);
+                self.system.lock().unwrap().change_key(key_index, val);
             }
             _ => {}
         }
     }
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
+        let mut system = self.system.lock().unwrap();
         let logic_instant = Instant::now();
         let mut cycles_elapsed = 0;
         for _ in 0..SPEED_UP {
-            while !self.system.vblank {
-                let steps = self
-                    .system
+            while !system.vblank {
+                let steps = system
                     .step_cpu()
                     .unwrap_or_else(|e| panic!("Failed to step CPU: {e}"));
 
-                self.system
+                system
                     .tick_subsystems(steps)
                     .unwrap_or_else(|e| panic!("Failed to tick subSystems: {e}"));
                 cycles_elapsed += 1;
             }
 
-            self.system.vblank = false;
+            system.vblank = false;
         }
         let logic_time = logic_instant.elapsed();
 
