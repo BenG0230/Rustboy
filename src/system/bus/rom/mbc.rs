@@ -1,15 +1,18 @@
 mod mbc0;
 mod mbc1;
 mod mbc3;
+mod mbc5;
 
 use mbc0::Mbc0;
 use mbc1::Mbc1;
 use mbc3::Mbc3;
+use mbc5::Mbc5;
 
 pub enum Mbc {
     Mbc0(Mbc0),
     Mbc1(Mbc1),
     Mbc3(Mbc3),
+    Mbc5(Mbc5),
 }
 
 pub trait MbcTrait {
@@ -21,8 +24,9 @@ impl Mbc {
     pub fn new(rom_data: Vec<u8>) -> Self {
         match rom_data[0x147] {
             0x00 => Self::Mbc0(Mbc0::new(rom_data)),
-            0x01 | 0x02 | 0x03 => Self::Mbc1(Mbc1::new(rom_data)),
+            0x01..=0x03 => Self::Mbc1(Mbc1::new(rom_data)),
             0x0F..=0x13 => Self::Mbc3(Mbc3::new(rom_data)),
+            0x19..=0x1E => Self::Mbc5(Mbc5::new(rom_data)),
             mbc => panic!("Unknown mbc {:02X}", mbc),
         }
     }
@@ -34,6 +38,7 @@ impl MbcTrait for Mbc {
             Mbc::Mbc0(mbc) => mbc.read_byte(addr),
             Mbc::Mbc1(mbc) => mbc.read_byte(addr),
             Mbc::Mbc3(mbc) => mbc.read_byte(addr),
+            Mbc::Mbc5(mbc) => mbc.read_byte(addr),
         }
     }
 
@@ -42,6 +47,7 @@ impl MbcTrait for Mbc {
             Mbc::Mbc0(mbc) => mbc.write_byte(addr, val),
             Mbc::Mbc1(mbc) => mbc.write_byte(addr, val),
             Mbc::Mbc3(mbc) => mbc.write_byte(addr, val),
+            Mbc::Mbc5(mbc) => mbc.write_byte(addr, val),
         }
     }
 }

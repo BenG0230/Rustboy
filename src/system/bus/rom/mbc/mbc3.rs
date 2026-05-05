@@ -98,9 +98,11 @@ impl super::MbcTrait for Mbc3 {
                 if self.ram_enable {
                     match self.ram_bank {
                         0..=0x7 => {
-                            // Ram
-                            let banked_addr =
-                                (self.ram_bank as usize) * 0x2000 + (addr as usize - 0xA000);
+                            let max_bank = self.ram.len() / 0x2000;
+
+                            let bank_number = (self.ram_bank as usize) % max_bank;
+
+                            let banked_addr = bank_number * 0x2000 + (addr as usize - 0xA000);
 
                             if banked_addr < self.ram.len() {
                                 self.ram[banked_addr] = val;

@@ -11,8 +11,6 @@ use cpu::{Cpu, CpuError};
 pub struct System {
     cpu: Cpu,
     bus: Bus,
-
-    pub vblank: bool,
 }
 
 impl System {
@@ -23,7 +21,6 @@ impl System {
         Ok(Self {
             cpu: Cpu::new(),
             bus,
-            vblank: false,
         })
     }
 
@@ -60,7 +57,6 @@ impl System {
 
             self.bus.step_ppu();
             if self.bus.check_vblank_interrupt() {
-                self.vblank = true;
                 let interrupt_flag = self.bus.read_byte(0xFF0F)?;
                 self.bus.write_byte(0xFF0F, interrupt_flag | 0b1)?;
             }

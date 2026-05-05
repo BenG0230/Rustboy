@@ -1,7 +1,7 @@
 use crate::system::bus::BusError;
 
 pub struct SquareChannel {
-    enabled: bool,
+    pub enabled: bool,
     period: u16,       // Split between NR*3/4
     period_timer: u16, // Number of t-cycles till next step
 
@@ -86,10 +86,8 @@ impl SquareChannel {
 
                 Ok(output)
             }
-            0xFF13 | 0xFF18 => Ok((self.period & 0xFF) as u8),
             0xFF14 | 0xFf19 => {
-                let mut output = 0b10111000;
-                output |= ((self.period & 0x700) >> 8) as u8;
+                let mut output = 0b10111111;
                 output |= (self.len_enabled as u8) << 6;
 
                 Ok(output)
