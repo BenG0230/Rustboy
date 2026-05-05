@@ -1,8 +1,9 @@
 mod bus;
 mod cpu;
 
-use std::time::Duration;
-use std::{error::Error, iter::Cycle};
+use std::collections::VecDeque;
+use std::error::Error;
+use std::sync::{Arc, Mutex};
 
 use bus::{Bus, BusError};
 use cpu::{Cpu, CpuError};
@@ -34,8 +35,8 @@ impl System {
         self.bus.change_key(button_index, val);
     }
 
-    pub fn mix_apu(&mut self) -> f32 {
-        self.bus.mix_apu()
+    pub fn get_apu_buffer(&self) -> Arc<Mutex<VecDeque<f32>>> {
+        self.bus.get_apu_buffer()
     }
 
     // Run next instruction
@@ -67,7 +68,6 @@ impl System {
                 let interrupt_flag = self.bus.read_byte(0xFF0F)?;
                 self.bus.write_byte(0xFF0F, interrupt_flag | 0b10)?;
             }
-
             self.bus.step_apu();
         }
 

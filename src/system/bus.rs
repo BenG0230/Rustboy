@@ -6,7 +6,12 @@ mod rom;
 use apu::Apu;
 use ppu::Ppu;
 use rom::{Rom, RomError};
-use std::{error::Error, fmt};
+use std::{
+    collections::VecDeque,
+    error::Error,
+    fmt,
+    sync::{Arc, Mutex},
+};
 
 use io::Io;
 
@@ -132,8 +137,8 @@ impl Bus {
         self.ppu.get_frame_buffer()
     }
 
-    pub fn mix_apu(&mut self) -> f32 {
-        self.apu.mix()
+    pub fn get_apu_buffer(&self) -> Arc<Mutex<VecDeque<f32>>> {
+        self.apu.buffer.clone()
     }
 
     pub fn check_timer_interrupt(&mut self) -> bool {

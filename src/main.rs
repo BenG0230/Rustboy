@@ -2,6 +2,7 @@ mod audio;
 mod system;
 
 use std::{
+    collections::VecDeque,
     env,
     sync::{Arc, Mutex},
     time::{Duration, Instant},
@@ -26,21 +27,22 @@ const SPEED_UP: u32 = 1;
 struct App {
     window: Option<&'static Window>,
     pixels: Option<Pixels<'static>>,
-    system: Arc<Mutex<System>>,
+    system: System,
     last_frame: Instant,
 }
 
 struct ApuSource {
-    system: Arc<Mutex<System>>,
+    buffer: Arc<Mutex<VecDeque<f32>>>,
 }
 
 impl Iterator for ApuSource {
     type Item = f32;
 
     fn next(&mut self) -> Option<f32> {
-        let mut system = self.system.lock().unwrap();
+        let mut buffer = self.buffer.lock().unwrap();
+        let sample = buffer.pop_front();
 
-        Some(system.mix_apu())
+        Some(sample.unwrap_or(0.0))
     }
 }
 
@@ -64,15 +66,13 @@ impl Source for ApuSource {
 
 impl App {
     fn new(rom_fname: &str) -> Self {
-        let system = Arc::new(Mutex::new(
-            System::new(rom_fname).unwrap_or_else(|e| panic!("{e}")),
-        ));
+        let system = System::new(rom_fname).unwrap_or_else(|e| panic!("{e}"));
 
         let stream_handle =
             DeviceSinkBuilder::open_default_sink().expect("Open default audio stream");
 
         let audio_source = ApuSource {
-            system: system.clone(),
+            buffer: system.get_apu_buffer(),
         };
 
         stream_handle.mixer().add(audio_source);
@@ -119,7 +119,7 @@ impl ApplicationHandler for App {
                 if let Some(pixels) = &mut self.pixels {
                     let frame = pixels.frame_mut();
 
-                    self.system.lock().unwrap().copy_frame_buffer(frame);
+                    self.system.copy_frame_buffer(frame);
 
                     pixels.render().unwrap();
                 }
@@ -154,45 +154,44 @@ impl ApplicationHandler for App {
                     ElementState::Pressed => true,
                     ElementState::Released => false,
                 };
-                self.system.lock().unwrap().change_key(key_index, val);
+                self.system.change_key(key_index, val);
             }
             _ => {}
         }
     }
 
     fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
-        let mut system = self.system.lock().unwrap();
         let logic_instant = Instant::now();
+        let mut total_cycles_elapsed = 0;
         let mut cycles_elapsed = 0;
         for _ in 0..SPEED_UP {
-            while !system.vblank {
-                let steps = system
+            while cycles_elapsed < 70224 {
+                let steps = self
+                    .system
                     .step_cpu()
                     .unwrap_or_else(|e| panic!("Failed to step CPU: {e}"));
 
-                system
+                self.system
                     .tick_subsystems(steps)
                     .unwrap_or_else(|e| panic!("Failed to tick subSystems: {e}"));
-                cycles_elapsed += 1;
+                cycles_elapsed += steps as u32;
             }
-
-            system.vblank = false;
+            total_cycles_elapsed += cycles_elapsed;
+            cycles_elapsed = 0;
         }
         let logic_time = logic_instant.elapsed();
 
-        self.window.as_ref().unwrap().request_redraw();
-
         let elapsed = self.last_frame.elapsed();
-        let target_frame_time = Duration::from_secs_f64(1.0 / 59.73);
+        let target_frame_time = Duration::from_secs_f64(70224.0 / 4_194_304.0);
         if elapsed < target_frame_time {
-            std::thread::sleep(target_frame_time - elapsed);
+            std::thread::sleep(target_frame_time - elapsed - Duration::from_micros(100));
         }
         let frame_time = self.last_frame.elapsed();
 
-        // println!(
-        //     "logic_time: {:?}, frame time: {:?}, cycles_elapsed: {}",
-        //     logic_time, frame_time, cycles_elapsed
-        // );
+        println!(
+            "logic_time: {:?}, frame time: {:?}, cycles_elapsed: {}",
+            logic_time, frame_time, total_cycles_elapsed
+        );
 
         self.last_frame = Instant::now();
     }
