@@ -111,6 +111,10 @@ impl SquareChannel {
                 self.envelope_period = val & 0b111;
                 self.envelope_dir = (val & 0b1000) > 0;
                 self.initial_vol = (val & 0b11110000) >> 4;
+
+                if (val & 0b11111000) == 0 {
+                    self.enabled = false;
+                }
             }
             0xFF13 | 0xFF18 => self.period = (self.period & 0x700) | val as u16,
             0xFF14 | 0xFF19 => {

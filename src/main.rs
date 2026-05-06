@@ -183,7 +183,7 @@ impl ApplicationHandler for App {
         let elapsed = self.last_frame.elapsed();
         let target_frame_time = Duration::from_secs_f64(70224.0 / 4_194_304.0);
         if elapsed < target_frame_time {
-            std::thread::sleep(target_frame_time - elapsed - Duration::from_micros(100));
+            std::thread::sleep(target_frame_time - elapsed);
         }
         let frame_time = self.last_frame.elapsed();
 

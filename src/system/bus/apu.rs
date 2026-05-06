@@ -1,3 +1,4 @@
+mod noise_channel;
 mod square_channel;
 mod wave_channel;
 
@@ -7,6 +8,7 @@ use std::{
 };
 
 use super::BusError;
+use noise_channel::NoiseChannel;
 use square_channel::SquareChannel;
 use wave_channel::WaveChannel;
 
@@ -15,6 +17,7 @@ pub struct Apu {
     ch1: SquareChannel,
     ch2: SquareChannel,
     ch3: WaveChannel,
+    ch4: NoiseChannel,
     sample_timer: f64,
     pub buffer: Arc<Mutex<VecDeque<f32>>>,
     accumulator: u8,
@@ -27,6 +30,7 @@ impl Apu {
             ch1: SquareChannel::new(true),
             ch2: SquareChannel::new(false),
             ch3: WaveChannel::new(),
+            ch4: NoiseChannel::new(),
             sample_timer: 0.0,
             buffer: Arc::new(Mutex::new(VecDeque::new())),
             accumulator: 0,
@@ -40,12 +44,14 @@ impl Apu {
                 output |= self.ch1.enabled as u8;
                 output |= (self.ch2.enabled as u8) << 1;
                 output |= (self.ch3.enabled as u8) << 2;
+                output |= (self.ch4.enabled as u8) << 3;
                 output |= (self.enabled as u8) << 7;
                 Ok(output)
             }
             0xFF10..=0xFF14 => self.ch1.read_byte(addr),
             0xFF16..=0xFF19 => self.ch2.read_byte(addr),
             0xFF1A..=0xFF1E | 0xFF30..=0xFF3F => self.ch3.read_byte(addr),
+            0xFF20..=0xFF23 => self.ch4.read_byte(addr),
             _ => Ok(0xFF),
         }
     }
@@ -56,6 +62,7 @@ impl Apu {
             0xFF10..=0xFF14 => self.ch1.write_byte(addr, val)?,
             0xFF16..=0xFF19 => self.ch2.write_byte(addr, val)?,
             0xFF1A..=0xFF1E | 0xFF30..=0xFF3F => self.ch3.write_byte(addr, val)?,
+            0xFF20..=0xFF23 => self.ch4.write_byte(addr, val)?,
             _ => {}
         }
         Ok(())
@@ -78,6 +85,8 @@ impl Apu {
             self.mix();
         }
 
+        // channel 4 ticks every t-cycle
+        self.ch4.tick();
         // Tick channels every 4 t-cycles (m-cycle)
         self.accumulator += 1;
         if self.accumulator >= 4 {
@@ -103,10 +112,15 @@ impl Apu {
         // add together all channels samples and normalise
 
         let ch1_sample = self.ch1.sample();
+        // let ch1_sample = 0.0;
         let ch2_sample = self.ch2.sample();
+        // let ch2_sample = 0.0;
         let ch3_sample = self.ch3.sample();
+        // let ch3_sample = 0.0;
+        let ch4_sample = self.ch4.sample();
+        // let ch4_sample = 0.0;
 
-        let sample = (ch1_sample + ch2_sample + ch3_sample) / 3.0;
+        let sample = (ch1_sample + ch2_sample + ch3_sample + ch4_sample) / 4.0;
 
         self.buffer.lock().unwrap().push_back(sample);
     }

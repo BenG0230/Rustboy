@@ -30,7 +30,7 @@ impl WaveChannel {
             internal_len_timer: 0,
             volume: 0,
             wave_ram: [0; 16],
-            wave_index: 0,
+            wave_index: 1,
         }
     }
 
@@ -75,7 +75,7 @@ impl WaveChannel {
                     self.internal_len_timer = 0;
 
                     self.period_timer = self.period;
-                    self.wave_index = 0;
+                    self.wave_index = 1;
                 }
             }
             0xFF30..=0xFF3F => self.wave_ram[(addr - 0xFF30) as usize] = val,
