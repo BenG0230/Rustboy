@@ -47,10 +47,10 @@ pub struct Bus {
 }
 
 impl Bus {
-    pub fn new(rom_fname: &str) -> Result<Self, Box<dyn Error>> {
+    pub fn new(rom_fname: &str, ram_fname: &str) -> Result<Self, Box<dyn Error>> {
         Ok(Self {
-            rom: Rom::new(rom_fname)?, // ROM + RAM
-            ppu: Ppu::new(),           // VRAM + OAM + Video I/O Regs
+            rom: Rom::new(rom_fname, ram_fname)?, // ROM + RAM
+            ppu: Ppu::new(),                      // VRAM + OAM + Video I/O Regs
             apu: Apu::new(),
             wram: [0; 8192],
             io: Io::new(),

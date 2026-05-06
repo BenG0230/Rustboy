@@ -51,7 +51,7 @@ impl Source for ApuSource {
     }
 
     fn channels(&self) -> rodio::ChannelCount {
-        nz!(1)
+        nz!(2)
     }
 
     fn sample_rate(&self) -> rodio::SampleRate {
@@ -64,8 +64,8 @@ impl Source for ApuSource {
 }
 
 impl App {
-    fn new(rom_fname: &str) -> Self {
-        let system = System::new(rom_fname).unwrap_or_else(|e| panic!("{e}"));
+    fn new(rom_fname: &str, ram_fname: &str) -> Self {
+        let system = System::new(rom_fname, ram_fname).unwrap_or_else(|e| panic!("{e}"));
 
         let stream_handle =
             DeviceSinkBuilder::open_default_sink().expect("Open default audio stream");
@@ -180,8 +180,8 @@ impl ApplicationHandler for App {
         }
         let logic_time = logic_instant.elapsed();
 
-        let elapsed = self.last_frame.elapsed();
         let target_frame_time = Duration::from_secs_f64(70224.0 / 4_194_304.0);
+        let elapsed = self.last_frame.elapsed();
         if elapsed < target_frame_time {
             std::thread::sleep(target_frame_time - elapsed);
         }
@@ -205,11 +205,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let rom_fname = &args[1];
+    let ram_fname = &args[2];
 
     let event_loop = EventLoop::new().unwrap();
     event_loop.set_control_flow(ControlFlow::Poll);
 
-    let mut app = App::new(rom_fname);
+    let mut app = App::new(rom_fname, ram_fname);
     event_loop.run_app(&mut app)?;
 
     Ok(())

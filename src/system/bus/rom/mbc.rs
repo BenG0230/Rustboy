@@ -21,11 +21,11 @@ pub trait MbcTrait {
 }
 
 impl Mbc {
-    pub fn new(rom_data: Vec<u8>) -> Self {
+    pub fn new(rom_data: Vec<u8>, ram_data: Vec<u8>) -> Self {
         match rom_data[0x147] {
             0x00 => Self::Mbc0(Mbc0::new(rom_data)),
             0x01..=0x03 => Self::Mbc1(Mbc1::new(rom_data)),
-            0x0F..=0x13 => Self::Mbc3(Mbc3::new(rom_data)),
+            0x0F..=0x13 => Self::Mbc3(Mbc3::new(rom_data, ram_data)),
             0x19..=0x1E => Self::Mbc5(Mbc5::new(rom_data)),
             mbc => panic!("Unknown mbc {:02X}", mbc),
         }

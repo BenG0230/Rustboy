@@ -15,8 +15,8 @@ pub struct System {
 
 impl System {
     // Create a new system with rom path/<rom_fname>
-    pub fn new(rom_fname: &str) -> Result<Self, Box<dyn Error>> {
-        let bus = Bus::new(rom_fname)?;
+    pub fn new(rom_fname: &str, ram_fname: &str) -> Result<Self, Box<dyn Error>> {
+        let bus = Bus::new(rom_fname, ram_fname)?;
 
         Ok(Self {
             cpu: Cpu::new(),

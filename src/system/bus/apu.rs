@@ -18,6 +18,10 @@ pub struct Apu {
     ch2: SquareChannel,
     ch3: WaveChannel,
     ch4: NoiseChannel,
+    vin_r: bool,
+    vin_l: bool,
+    volume_r: u8,
+    volume_l: u8,
     sample_timer: f64,
     pub buffer: Arc<Mutex<VecDeque<f32>>>,
     accumulator: u8,
@@ -31,6 +35,10 @@ impl Apu {
             ch2: SquareChannel::new(false),
             ch3: WaveChannel::new(),
             ch4: NoiseChannel::new(),
+            vin_r: true,
+            vin_l: true,
+            volume_r: 15,
+            volume_l: 15,
             sample_timer: 0.0,
             buffer: Arc::new(Mutex::new(VecDeque::new())),
             accumulator: 0,
@@ -48,6 +56,15 @@ impl Apu {
                 output |= (self.enabled as u8) << 7;
                 Ok(output)
             }
+            0xFF24 => {
+                let mut output = 0;
+                output |= self.volume_r & 0b111;
+                output |= (self.vin_r as u8) << 3;
+                output |= (self.volume_l & 0b111) << 4;
+                output |= (self.vin_l as u8) << 7;
+
+                Ok(output)
+            }
             0xFF10..=0xFF14 => self.ch1.read_byte(addr),
             0xFF16..=0xFF19 => self.ch2.read_byte(addr),
             0xFF1A..=0xFF1E | 0xFF30..=0xFF3F => self.ch3.read_byte(addr),
@@ -59,6 +76,12 @@ impl Apu {
     pub fn write_byte(&mut self, addr: u16, val: u8) -> Result<(), BusError> {
         match addr {
             0xFF26 => self.enabled = (val & 0b10000000) > 0,
+            0xFF24 => {
+                self.volume_r = val & 7;
+                self.vin_r = (val & 8) > 0;
+                self.volume_l = (val & 0x70) >> 4;
+                self.vin_r = (val & 0x80) > 0;
+            }
             0xFF10..=0xFF14 => self.ch1.write_byte(addr, val)?,
             0xFF16..=0xFF19 => self.ch2.write_byte(addr, val)?,
             0xFF1A..=0xFF1E | 0xFF30..=0xFF3F => self.ch3.write_byte(addr, val)?,
@@ -122,6 +145,18 @@ impl Apu {
 
         let sample = (ch1_sample + ch2_sample + ch3_sample + ch4_sample) / 4.0;
 
-        self.buffer.lock().unwrap().push_back(sample);
+        let amplitude_r = if self.vin_r {
+            (self.volume_r + 1) as f32 / 15.0
+        } else {
+            0.0
+        };
+        let amplitude_l = if self.vin_l {
+            (self.volume_l + 1) as f32 / 15.0
+        } else {
+            0.0
+        };
+
+        self.buffer.lock().unwrap().push_back(sample * amplitude_r);
+        self.buffer.lock().unwrap().push_back(sample * amplitude_l);
     }
 }

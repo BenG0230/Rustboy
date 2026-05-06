@@ -13,7 +13,7 @@ pub struct Mbc3 {
 }
 
 impl Mbc3 {
-    pub fn new(rom_data: Vec<u8>) -> Self {
+    pub fn new(rom_data: Vec<u8>, ram_data: Vec<u8>) -> Self {
         let ram_size = match rom_data[0x149] {
             // Dynamically set RAM size based on byte 0x149 in ROM
             1 => 1024 * 2,
@@ -26,7 +26,7 @@ impl Mbc3 {
 
         Self {
             rom: rom_data,
-            ram: vec![0; ram_size],
+            ram: vec![0xFF; ram_size],
             rtc_regs: [0; 5],
             rom_bank: 1,
             ram_bank: 0,

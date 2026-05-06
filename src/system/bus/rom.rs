@@ -21,13 +21,14 @@ pub struct Rom {
 }
 
 impl Rom {
-    pub fn new(file_name: &str) -> Result<Self, Box<dyn Error>> {
+    pub fn new(file_name: &str, save_file_name: &str) -> Result<Self, Box<dyn Error>> {
         let data: Vec<u8> = fs::read(file_name)?;
+        let rom_data: Vec<u8> = fs::read(save_file_name)?;
 
         // read_header(&data);
 
         Ok(Self {
-            mbc: Mbc::new(data),
+            mbc: Mbc::new(data, rom_data),
         })
     }
 

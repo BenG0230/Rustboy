@@ -81,7 +81,7 @@ impl NoiseChannel {
                 self.initial_vol = (val & 0b11110000) >> 4;
 
                 if (val & 0b11111000) == 0 {
-                    self.volume = 0;
+                    self.enabled = false;
                 }
             }
             0xFF22 => {
@@ -99,7 +99,7 @@ impl NoiseChannel {
                     }
                     self.internal_len_timer = 0;
                     self.period_timer =
-                        (DIVISORS[self.clock_div as usize] << self.clock_shift) as u16;
+                        (DIVISORS[self.clock_div as usize] as u16) << (self.clock_shift as u16);
                     self.envelope_timer = 0;
                     self.volume = self.initial_vol;
                     self.lfsr = 0;
@@ -148,7 +148,8 @@ impl NoiseChannel {
         }
 
         if self.period_timer == 0 {
-            self.period_timer = (DIVISORS[self.clock_div as usize] << self.clock_shift) as u16;
+            self.period_timer =
+                (DIVISORS[self.clock_div as usize] as u16) << (self.clock_shift as u16);
 
             // tick lfsr
             let new_bit = !((self.lfsr & 0b1) ^ ((self.lfsr >> 1) & 0b1));
