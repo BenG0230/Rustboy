@@ -80,7 +80,7 @@ impl Apu {
                 self.volume_r = val & 7;
                 self.vin_r = (val & 8) > 0;
                 self.volume_l = (val & 0x70) >> 4;
-                self.vin_r = (val & 0x80) > 0;
+                self.vin_l = (val & 0x80) > 0;
             }
             0xFF10..=0xFF14 => self.ch1.write_byte(addr, val)?,
             0xFF16..=0xFF19 => self.ch2.write_byte(addr, val)?,
@@ -130,9 +130,8 @@ impl Apu {
         // called at 44.1kHz (rodio source sample rate)
         // 4.194304MHz / 44.1kHz ~= 95.11
         // so called every 95.11 t-cycles
+
         // add samples to buffer for rodio to consume when needed at 44.1kHz
-        //
-        // add together all channels samples and normalise
 
         let ch1_sample = self.ch1.sample();
         // let ch1_sample = 0.0;
@@ -143,6 +142,7 @@ impl Apu {
         let ch4_sample = self.ch4.sample();
         // let ch4_sample = 0.0;
 
+        // add together all channels samples and normalise
         let sample = (ch1_sample + ch2_sample + ch3_sample + ch4_sample) / 4.0;
 
         let amplitude_r = if self.vin_r {

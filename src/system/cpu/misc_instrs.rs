@@ -9,7 +9,7 @@ impl Cpu {
         _bus: &mut Bus,
         opcode: u8,
     ) -> Result<u8, CpuError> {
-        // Either Instruction not implemented or tis illegal
+        // Either Instruction not implemented or is illegal
         Err(CpuError::InstructionError(opcode))
     }
 

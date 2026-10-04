@@ -22,6 +22,7 @@ use winit::{
 const WIDTH: u32 = 160;
 const HEIGHT: u32 = 144;
 const SPEED_UP: u32 = 1;
+const DEBUG_FRAMETIME: bool = false;
 
 struct App {
     window: Option<&'static Window>,
@@ -64,8 +65,8 @@ impl Source for ApuSource {
 }
 
 impl App {
-    fn new(rom_fname: &str, ram_fname: &str) -> Self {
-        let system = System::new(rom_fname, ram_fname).unwrap_or_else(|e| panic!("{e}"));
+    fn new(rom_fname: &str) -> Self {
+        let system = System::new(rom_fname).unwrap_or_else(|e| panic!("{e}"));
 
         let stream_handle =
             DeviceSinkBuilder::open_default_sink().expect("Open default audio stream");
@@ -187,10 +188,12 @@ impl ApplicationHandler for App {
         }
         let frame_time = self.last_frame.elapsed();
 
-        println!(
-            "logic_time: {:?}, frame time: {:?}, cycles_elapsed: {}",
-            logic_time, frame_time, total_cycles_elapsed
-        );
+        if DEBUG_FRAMETIME {
+            println!(
+                "logic_time: {:?}, frame time: {:?}, cycles_elapsed: {}",
+                logic_time, frame_time, total_cycles_elapsed
+            );
+        }
 
         self.last_frame = Instant::now();
     }
@@ -205,12 +208,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let rom_fname = &args[1];
-    let ram_fname = &args[2];
+    // let ram_fname = &args[2];
 
     let event_loop = EventLoop::new().unwrap();
     event_loop.set_control_flow(ControlFlow::Poll);
 
-    let mut app = App::new(rom_fname, ram_fname);
+    let mut app = App::new(rom_fname);
     event_loop.run_app(&mut app)?;
 
     Ok(())

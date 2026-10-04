@@ -14,7 +14,7 @@ pub struct Instruction {
     cycles: u8,
     bytes: u16,
     helper: fn(&mut Cpu, &mut Bus, u8) -> Result<u8, CpuError>,
-    mneumonic: &'static str,
+    mnemonic: &'static str,
 }
 
 impl Instruction {
@@ -22,13 +22,13 @@ impl Instruction {
         cycles: u8,
         bytes: u16,
         helper: fn(&mut Cpu, &mut Bus, u8) -> Result<u8, CpuError>,
-        mneumonic: &'static str,
+        mnemonic: &'static str,
     ) -> Self {
         Self {
             cycles,
             bytes,
             helper,
-            mneumonic,
+            mnemonic,
         }
     }
 
@@ -82,7 +82,7 @@ impl Cpu {
             self.l,
             self.sp,
             self.pc,
-            instruction.mneumonic,
+            instruction.mnemonic,
             bus.read_byte(self.pc).unwrap(),
             bus.read_byte(self.pc + 1).unwrap(),
             bus.read_byte(self.pc + 2).unwrap(),

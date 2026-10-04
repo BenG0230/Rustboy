@@ -68,7 +68,7 @@ pub struct Cpu {
 impl Cpu {
     // --- Initialisation
     pub fn new() -> Self {
-        //TODO: Change this when implementing a boot rom
+        // Default values after DMG boot rom has run
         Self {
             a: 0x01,
             f: 0xB0,
@@ -277,8 +277,6 @@ impl Cpu {
 
     // --- Emulation ---
     pub fn step(&mut self, bus: &mut Bus) -> Result<u8, CpuError> {
-        // TODO: Interrupts
-
         let ie = bus.read_byte(0xFFFF)?;
         let if_reg = bus.read_byte(0xFF0F)?;
 
@@ -293,10 +291,8 @@ impl Cpu {
             }
         }
 
-        if !(self.stopped) {
-            if !(self.halted) {
-                return self.decode(bus);
-            }
+        if !self.stopped && !self.halted {
+            return self.decode(bus);
         }
 
         Ok(1)

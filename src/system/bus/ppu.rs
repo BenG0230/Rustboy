@@ -140,7 +140,7 @@ impl Ppu {
             }
         }
 
-        for dx in (0..160usize).rev() {
+        for dx in 0..160usize {
             // Pixel position in the background/window
             let x;
             let y;
@@ -254,7 +254,7 @@ impl Ppu {
                     let bit2 = (self.memory.vram[tile_addr + 1] >> (7 - pixel_x)) & 1;
                     let ob_palette_index = bit2 << 1 | bit1;
 
-                    // Use object pallette 0/1 based on palette flag
+                    // Use object palette 0/1 based on palette flag
                     let colour_index = if flags & 0b10000 == 0 {
                         self.memory.obp0[ob_palette_index as usize]
                     } else {
@@ -276,7 +276,7 @@ impl Ppu {
     }
 
     pub(super) fn get_frame_buffer(&mut self) -> &mut Vec<u8> {
-        return &mut self.buffer;
+        &mut self.buffer
     }
 
     pub(super) fn check_for_statinterrupt(&mut self) -> bool {
@@ -296,120 +296,4 @@ impl Ppu {
             false
         }
     }
-
-    // ### Debug Rendering ###
-
-    // pub fn get_tile(&mut self, index: u16) -> [u8; 64] {
-    //     let mut bytes: [u8; 16] = [0; 16];
-    //     let mut tile: [u8; 64] = [0; 64];
-    //
-    //     for i in 0..16usize {
-    //         bytes[i as usize] = self.memory.vram[(index as usize * 16) + i];
-    //     }
-    //
-    //     for line in (0..16).step_by(2) {
-    //         let byte1 = bytes[line];
-    //         let byte2 = bytes[line + 1];
-    //         for bit in (0..8).rev() {
-    //             let bit_mask = 1 << bit;
-    //             let pixel = ((byte2 & bit_mask) >> bit) << 1 | (byte1 & bit_mask) >> bit;
-    //
-    //             tile[(line * 4) + (7 - bit)] = pixel;
-    //         }
-    //     }
-    //
-    //     tile
-    // }
-    //
-    // pub fn render_tile_banks(&mut self, buffer: &mut Vec<u32>) {
-    //     for y in 0..24usize {
-    //         for x in 0..16usize {
-    //             let tile = self.get_tile((y * 16 + x) as u16);
-    //
-    //             for py in 0..8usize {
-    //                 for px in 0..8 {
-    //                     let pixel_index = px + py * 8;
-    //                     let colour_indice = self.memory.bgp[tile[pixel_index] as usize];
-    //                     let colour = self.palette[colour_indice as usize];
-    //
-    //                     buffer[(x * 8 + y * (8 * 128)) + (px + py * 128)] = colour;
-    //                 }
-    //             }
-    //         }
-    //     }
-    // }
-    //
-    // pub fn render_tile_maps(&mut self, buffer: &mut Vec<u32>) {
-    //     for y in 0..64usize {
-    //         for x in 0..32usize {
-    //             let mut tile_index = self.memory.vram[0x1800 + (0x20 * y) + x] as u16;
-    //
-    //             if self.memory.lcdc & 0b10000 == 0 {
-    //                 if tile_index < 0x80 {
-    //                     tile_index += 0x100;
-    //                 }
-    //             }
-    //
-    //             let tile = self.get_tile(tile_index);
-    //
-    //             for py in 0..8usize {
-    //                 for px in 0..8usize {
-    //                     let pixel_index = px + py * 8;
-    //                     let colour_indice = self.memory.bgp[tile[pixel_index] as usize];
-    //                     let colour = self.palette[colour_indice as usize];
-    //
-    //                     if y >= 32 {
-    //                         buffer[(x * 8 + y * (8 * 256)) + (px + (py + 1) * 256)] = colour;
-    //                     } else {
-    //                         buffer[(x * 8 + y * (8 * 256)) + (px + py * 256)] = colour;
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //     }
-    //
-    //     // scxy border box
-    //     let scy_offset = if self.memory.lcdc & 0b1000 == 0 {
-    //         0
-    //     } else {
-    //         257
-    //     };
-    //
-    //     for i in (self.memory.scx as usize)..=(self.memory.scx as usize + 160) {
-    //         let x = i % 256;
-    //
-    //         buffer[x + 256 * (self.memory.scy as usize + scy_offset)] = 0xFF0000;
-    //         buffer[x + 256 * (((self.memory.scy as usize + 144) % 256) + scy_offset)] = 0xFF0000;
-    //     }
-    //
-    //     for i in (self.memory.scy as usize)..=(self.memory.scy as usize + 144) {
-    //         let y = i % 256 + scy_offset;
-    //
-    //         buffer[y * 256 + self.memory.scx as usize] = 0xFF0000;
-    //         buffer[y * 256 + self.memory.scx as usize + 160] = 0xFF0000;
-    //     }
-    //
-    //     // window border box
-    //     if self.memory.lcdc & 0b00100000 > 0 && self.memory.wx < 167 && self.memory.wy < 144 {
-    //         let wy_offset = if self.memory.lcdc & 0b01000000 == 0 {
-    //             0
-    //         } else {
-    //             257
-    //         };
-    //
-    //         for i in 0..=(167 - self.memory.wx as usize) {
-    //             let x = i % 256;
-    //
-    //             buffer[x + 256 * wy_offset] = 0x0000FF;
-    //             buffer[x + 256 * (wy_offset + (144 - self.memory.wy as usize))] = 0x0000FF;
-    //         }
-    //
-    //         for i in 0..=(144 - self.memory.wy as usize) {
-    //             let y = i % 256 + wy_offset;
-    //
-    //             buffer[y * 256] = 0x0000FF;
-    //             buffer[y * 256 + (167 - self.memory.wx as usize)] = 0x0000FF;
-    //         }
-    //     }
-    // }
 }
