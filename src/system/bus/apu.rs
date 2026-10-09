@@ -145,16 +145,8 @@ impl Apu {
         // add together all channels samples and normalise
         let sample = (ch1_sample + ch2_sample + ch3_sample + ch4_sample) / 4.0;
 
-        let amplitude_r = if self.vin_r {
-            (self.volume_r + 1) as f32 / 15.0
-        } else {
-            0.0
-        };
-        let amplitude_l = if self.vin_l {
-            (self.volume_l + 1) as f32 / 15.0
-        } else {
-            0.0
-        };
+        let amplitude_r = (self.volume_r + 1) as f32 / 15.0;
+        let amplitude_l = (self.volume_l + 1) as f32 / 15.0;
 
         self.buffer.lock().unwrap().push_back(sample * amplitude_r);
         self.buffer.lock().unwrap().push_back(sample * amplitude_l);
